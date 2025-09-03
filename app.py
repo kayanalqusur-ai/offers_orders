@@ -149,13 +149,6 @@ def login():
     return render_template('login.html')
 
 
-@app.route('/logout')
-@login_required
-def logout():
-    logout_user()
-    flash("تم تسجيل الخروج بنجاح", "info")
-    return redirect(url_for('login'))
-
 
 # ================== Decorator للتحقق من الصلاحيات ==================
 def permission_required(permission):
@@ -1073,9 +1066,9 @@ def delete_request(id):
     flash("تم حذف الطلب بنجاح ✅", "success")
     return redirect(url_for("orders"))
 # ================== تشغيل التطبيق ==================
-
-
+import os
 from config import Config
+from werkzeug.security import generate_password_hash
 
 if __name__ == '__main__':
     with app.app_context():
@@ -1083,7 +1076,6 @@ if __name__ == '__main__':
 
         # إنشاء أول مستخدم إذا لم يكن موجوداً
         if Employee.query.count() == 0:
-            from werkzeug.security import generate_password_hash
             admin = Employee(
                 name="Admin",
                 role="Administrator",
@@ -1114,11 +1106,11 @@ if __name__ == '__main__':
                 "salesw_offers_delete",
                 "orders_view",
                 "orders_add",
+                "orders_edit",   # ✨ ضفتها
                 "orders_delete"
             ])
             db.session.add(admin)
             db.session.commit()
-            print("تم إنشاء المستخدم الأول: admin / admin123")
+            print("✅ تم إنشاء المستخدم الأول: admin / admin123")
     
     app.run(debug=Config.DEBUG, host='0.0.0.0', port=Config.PORT)
-
