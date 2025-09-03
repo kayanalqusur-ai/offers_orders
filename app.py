@@ -1046,7 +1046,6 @@ def delete_request(id):
     flash("تم حذف الطلب بنجاح ✅", "success")
     return redirect(url_for("orders"))
 # ================== تشغيل التطبيق ==================
-
 if __name__ == '__main__':
     with app.app_context():
         db.create_all()
@@ -1083,11 +1082,12 @@ if __name__ == '__main__':
                 "salesw_offers_delete",
                 "orders_view",
                 "orders_add",
-                "orders_edit",   # ✨ ضفتها
+                "orders_edit",
                 "orders_delete"
             ])
             db.session.add(admin)
             db.session.commit()
             print("✅ تم إنشاء المستخدم الأول: admin / admin123")
-    
-app.run(debug=Config.DEBUG, host='0.0.0.0', port=Config.PORT)
+
+    app.run(debug=True, host='0.0.0.0', port=5000)
+
