@@ -1,6 +1,15 @@
+<<<<<<< HEAD
 Flask==2.3.3
 Flask-SQLAlchemy==3.0.5
 Flask-Login==0.6.2
 Werkzeug==2.3.7
 click==8.2.0
 gunicorn==20.1.0
+=======
+Flask==2.3.3
+Flask-SQLAlchemy==3.0.5
+Flask-Login==0.6.2
+Werkzeug==2.3.7
+click==8.2.0
+gunicorn==20.1.0
+>>>>>>> 39ecd2c11345e45706196718ec5efffe2807afa9
