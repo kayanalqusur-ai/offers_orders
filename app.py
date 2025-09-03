@@ -22,6 +22,24 @@ login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = 'login'
 
+
+# ================== السماح بامتدادات الملفات ==================
+ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
+def allowed_file(filename):
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
+# ================== وظائف مساعدة ==================
+def save_file(file):
+    if not file:
+        return None
+
+    filename = datetime.now().strftime("%Y-%m-%d_%H%M%S") + "_" + secure_filename(file.filename)
+    upload_folder = app.config['UPLOAD_FOLDER']
+    os.makedirs(upload_folder, exist_ok=True)
+    file.save(os.path.join(upload_folder, filename))
+    return filename
+
+
 # ================== النماذج ==================
 class Employee(db.Model, UserMixin):
     id = db.Column(db.Integer, primary_key=True)
@@ -360,38 +378,20 @@ def delete_employee(employee_id):
     return redirect(url_for('list_employees'))
 
 
-# ================== وظائف مساعدة ==================
-def save_file(file):
-    if not file:
-        return None
-
-    filename = datetime.now().strftime("%Y-%m-%d_%H%M%S") + "_" + secure_filename(file.filename)
-    upload_folder = app.config['UPLOAD_FOLDER']
-    os.makedirs(upload_folder, exist_ok=True)
-    file.save(os.path.join(upload_folder, filename))
-    return filename
 
 
 # ================== عروض الإيجار وسط ==================
-@app.route("/rentalm_offers/list.html")
+@app.route("/rentalm_offers/list")
 @login_required
 @permission_required('rentalm_offers_view')
 def rentalm_offers():
     offers = RentalOffer.query.filter_by(district='وسط').all()
     return render_template("rentalm_offers/list.html", offers=offers, district='وسط')
 
-def save_file(file):
-    """حفظ الملف وإرجاع اسم الملف"""
-    if not file:
-        return None
-    filename = secure_filename(file.filename)
-    image_folder = app.config['UPLOAD_FOLDER']
-    os.makedirs(image_folder, exist_ok=True)
-    file.save(os.path.join(image_folder, filename))
-    return filename
 
 
-@app.route("/rentalm_offers/add.html", methods=["GET", "POST"])
+
+@app.route("/rentalm_offers/add", methods=["GET", "POST"])
 @login_required
 @permission_required('rentalm_offers_add')
 def add_rentalm_offer():
@@ -506,22 +506,13 @@ def delete_rentalm_offer(offer_id):
 
 
 # ================== عروض الإيجار جنوب ==================
-@app.route("/rentalw_offers/list.html")
+@app.route("/rentalw_offers/list")
 @login_required
 @permission_required('rentalw_offers_view')
 def rentalw_offers():
     offers = RentalOffer.query.filter_by(district='جنوب').all()
     return render_template("rentalw_offers/list.html", offers=offers, district='جنوب')
 
-def save_file(file):
-    """حفظ الملف وإرجاع اسم الملف"""
-    if not file:
-        return None
-    filename = secure_filename(file.filename)
-    image_folder = app.config['UPLOAD_FOLDER']
-    os.makedirs(image_folder, exist_ok=True)
-    file.save(os.path.join(image_folder, filename))
-    return filename
 
 
 @app.route("/rentalw_offers/add.html", methods=["GET", "POST"])
@@ -642,17 +633,6 @@ def delete_rentalw_offer(offer_id):
 def salesm_offers():
     offers = SaleOffer.query.filter_by(district='وسط').all()
     return render_template('salesm_offers/list.html', offers=offers, district="وسط")
-
-
-def save_file(file):
-    """حفظ الملف وإرجاع اسم الملف"""
-    if not file:
-        return None
-    filename = secure_filename(file.filename)
-    image_folder = app.config['UPLOAD_FOLDER']
-    os.makedirs(image_folder, exist_ok=True)
-    file.save(os.path.join(image_folder, filename))
-    return filename
 
 
 @app.route("/salesm_offers/add", methods=["GET", "POST"])
@@ -1066,9 +1046,6 @@ def delete_request(id):
     flash("تم حذف الطلب بنجاح ✅", "success")
     return redirect(url_for("orders"))
 # ================== تشغيل التطبيق ==================
-import os
-from config import Config
-from werkzeug.security import generate_password_hash
 
 if __name__ == '__main__':
     with app.app_context():
@@ -1113,4 +1090,4 @@ if __name__ == '__main__':
             db.session.commit()
             print("✅ تم إنشاء المستخدم الأول: admin / admin123")
     
-    app.run(debug=Config.DEBUG, host='0.0.0.0', port=Config.PORT)
+app.run(debug=Config.DEBUG, host='0.0.0.0', port=Config.PORT)
