@@ -7,9 +7,9 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
 from datetime import datetime
 from functools import wraps
-
-# ================== إعداد التطبيق ==================
 from config import Config
+# ================== إعداد التطبيق ==================
+
 
 # إنشاء تطبيق Flask أولاً
 app = Flask(__name__)
@@ -19,6 +19,10 @@ db = SQLAlchemy(app)
 login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = 'login'
+
+@login_manager.user_loader
+def load_user(user_id):
+    return Employee.query.get(int(user_id))
 
 with app.app_context():
     db.create_all()
