@@ -172,8 +172,6 @@ def permission_required(permission):
 @app.route('/')
 @login_required
 def dashboard():
-    if request.method == 'HEAD':
-        return '', 200  # التعامل مع طلب HEAD
     try:
         employees_count = Employee.query.count()
         rentalm_offers_count = RentalOffer.query.filter_by(district='وسط').count()
@@ -182,7 +180,7 @@ def dashboard():
         salesw_offers_count = SaleOffer.query.filter_by(district='جنوب').count()
         orders_count = Orders.query.count()
     except Exception as e:
-        return f"حدث خطأ: {e}", 500
+        return f"حدث خطأ في dashboard: {e}", 500
 
     return render_template(
         'dashboard.html',
