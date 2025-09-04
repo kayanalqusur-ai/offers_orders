@@ -1,7 +1,5 @@
 import os
 import json
-from fileinput import filename
-from click import edit
 from flask import Flask, render_template, request, redirect, url_for, flash
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, login_user, login_required, logout_user, UserMixin, current_user
@@ -10,35 +8,30 @@ from werkzeug.utils import secure_filename
 from datetime import datetime
 from functools import wraps
 
-# ================== تهيئة التطبيق ==================
+# ================== إعداد التطبيق ==================
 from config import Config
 
 app = Flask(__name__)
 app.config.from_object(Config)
-
-
 db = SQLAlchemy(app)
+
 login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = 'login'
 
-
-# ================== السماح بامتدادات الملفات ==================
+# ================== إعداد الملفات ==================
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
+
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
-# ================== وظائف مساعدة ==================
 def save_file(file):
-    if not file:
+    if not file or not file.filename:
         return None
-
     filename = datetime.now().strftime("%Y-%m-%d_%H%M%S") + "_" + secure_filename(file.filename)
-    upload_folder = app.config['UPLOAD_FOLDER']
-    os.makedirs(upload_folder, exist_ok=True)
-    file.save(os.path.join(upload_folder, filename))
+    os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
+    file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
     return filename
-
 
 # ================== النماذج ==================
 class Employee(db.Model, UserMixin):
@@ -51,33 +44,25 @@ class Employee(db.Model, UserMixin):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
     def set_permissions(self, perms_list):
-        """حفظ الصلاحيات كـ JSON نصي"""
         if not isinstance(perms_list, list):
             perms_list = []
-        perms_list = [str(p) for p in perms_list]
-        self.permissions = json.dumps(perms_list)
+        self.permissions = json.dumps([str(p) for p in perms_list])
 
     def get_permissions(self):
-        """إرجاع قائمة الصلاحيات"""
         try:
             perms = json.loads(self.permissions or '[]')
-            if not isinstance(perms, list):
-                return []
-            return [str(p) for p in perms]
+            return [str(p) for p in perms] if isinstance(perms, list) else []
         except json.JSONDecodeError:
             return []
 
     def has_permission(self, perm):
-        """التحقق من وجود صلاحية معينة"""
         return str(perm) in self.get_permissions()
-
 
 class Log(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user = db.Column(db.String(150))
     action = db.Column(db.String(500))
     timestamp = db.Column(db.DateTime, default=datetime.utcnow)
-
 
 class Property(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -90,7 +75,6 @@ class Property(db.Model):
     owner_status = db.Column(db.String(50))
     images = db.Column(db.PickleType)
 
-
 class RentalOffer(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     property_id = db.Column(db.Integer, db.ForeignKey('property.id'))
@@ -99,39 +83,36 @@ class RentalOffer(db.Model):
     floor = db.Column(db.String(50))
     area = db.Column(db.Float)
     price = db.Column(db.Float)
-    detalis = db.Column(db.String(50))  # تم تصحيح الاسم
+    detalis = db.Column(db.String(50))  # تم توحيد الاسم
     owner_type = db.Column(db.String(50))
     location = db.Column(db.String(200))
     marketer = db.Column(db.String(100))
     notes = db.Column(db.Text)
-    status = db.Column(db.String(50))  # تم تصحيح Column
-    images      = db.Column(db.PickleType)  # لتخزين قائمة الصور
+    status = db.Column(db.String(50))
+    images = db.Column(db.PickleType)
     district = db.Column(db.String(50))
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
-
-
 class SaleOffer(db.Model):
-    id          = db.Column(db.Integer, primary_key=True)
-    unit_type   = db.Column(db.String(100))      
-    district    = db.Column(db.String(50))      
-    area        = db.Column(db.Float)             
-    floor       = db.Column(db.String(50))       
-    front       = db.Column(db.String(50))       
-    street      = db.Column(db.String(50))      
-    price       = db.Column(db.Float)            
-    sale_limit  = db.Column(db.Float)            
-    location    = db.Column(db.String(300))      
-    details     = db.Column(db.Text)             
-    marketer    = db.Column(db.String(100))     
-    owner_type  = db.Column(db.String(50))        
-    status      = db.Column(db.String(50))       
-    images      = db.Column(db.PickleType)  # لتخزين قائمة الصور
-    notes       = db.Column(db.Text)             
-    created_by  = db.Column(db.String(100))      
-    created_at  = db.Column(db.DateTime, default=datetime.utcnow)
-
+    id = db.Column(db.Integer, primary_key=True)
+    unit_type = db.Column(db.String(100))      
+    district = db.Column(db.String(50))      
+    area = db.Column(db.Float)             
+    floor = db.Column(db.String(50))       
+    front = db.Column(db.String(50))       
+    street = db.Column(db.String(50))      
+    price = db.Column(db.Float)            
+    sale_limit = db.Column(db.Float)            
+    location = db.Column(db.String(300))      
+    detalis = db.Column(db.Text)             
+    marketer = db.Column(db.String(100))     
+    owner_type = db.Column(db.String(50))        
+    status = db.Column(db.String(50))       
+    images = db.Column(db.PickleType)
+    notes = db.Column(db.Text)             
+    created_by = db.Column(db.String(100))      
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
 class Orders(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -145,12 +126,10 @@ class Orders(db.Model):
     notes = db.Column(db.Text, nullable=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
-
 # ================== إدارة المستخدم ==================
 @login_manager.user_loader
 def load_user(user_id):
     return Employee.query.get(int(user_id))
-
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -166,7 +145,12 @@ def login():
             flash("اسم المستخدم أو كلمة المرور خاطئة", "danger")
     return render_template('login.html')
 
-
+@app.route('/logout')
+@login_required
+def logout():
+    logout_user()
+    flash("تم تسجيل الخروج بنجاح ✅", "success")
+    return redirect(url_for('login'))
 
 # ================== Decorator للتحقق من الصلاحيات ==================
 def permission_required(permission):
@@ -179,7 +163,6 @@ def permission_required(permission):
             return f(*args, **kwargs)
         return decorated_function
     return decorator
-
 
 # ================== لوحة التحكم ==================
 @app.route('/')
@@ -201,6 +184,7 @@ def dashboard():
         salesw_offers_count=salesw_offers_count,
         orders_count=orders_count
     )
+
 
 # ================== إدارة الموظفين ==================
 
@@ -515,7 +499,7 @@ def rentalw_offers():
 
 
 
-@app.route("/rentalw_offers/add.html", methods=["GET", "POST"])
+@app.route("/rentalw_offers/add", methods=["GET", "POST"])
 @login_required
 @permission_required('rentalw_offers_add')
 def add_rentalw_offer():
@@ -655,7 +639,7 @@ def add_salesm_offer():
             unit_type=request.form.get("unit_type"),
             area=area_value,
             floor=request.form.get("floor"),
-            details=request.form.get("details"),
+            detalis=request.form.get("detalis"),
             price=price_value,
             sale_limit=sale_limit_value,
             front=request.form.get("front"),
@@ -700,7 +684,7 @@ def edit_salesm_offer(offer_id):
 
         offer.unit_type  = request.form.get("unit_type")
         offer.floor      = request.form.get("floor")
-        offer.details    = request.form.get("details")
+        offer.detals    = request.form.get("detalis")
         offer.front      = request.form.get("front")
         offer.street     = request.form.get("street")
         offer.owner_type = request.form.get("owner_type")
@@ -785,7 +769,7 @@ def add_salesw_offer():
             unit_type=request.form.get("unit_type"),
             area=area_value,
             floor=request.form.get("floor"),
-            details=request.form.get("details"),
+            detalis=request.form.get("detalis"),
             price=price_value,
             sale_limit=sale_limit_value,
             front=request.form.get("front"),
@@ -830,7 +814,7 @@ def edit_salesw_offer(offer_id):
 
         offer.unit_type  = request.form.get("unit_type")
         offer.floor      = request.form.get("floor")
-        offer.details    = request.form.get("details")
+        offer.detalis    = request.form.get("detalis")
         offer.front      = request.form.get("front")
         offer.street     = request.form.get("street")
         offer.owner_type = request.form.get("owner_type")
@@ -929,7 +913,7 @@ def orders():
 @permission_required('orders_add')
 def add_request():
     customer_name = request.form.get("customer_name")
-    property_type = request.form.get("unit_type")
+    unit_type = request.form.get("unit_type")
     area = request.form.get("area")
     price = request.form.get("price")
     location = request.form.get("location")
@@ -938,7 +922,7 @@ def add_request():
     notes = request.form.get("notes")
 
     # التحقق من الحقول المطلوبة
-    if not customer_name or not property_type:
+    if not customer_name or not unit_type:
         flash("الرجاء تعبئة الحقول المطلوبة (الاسم ونوع العقار)", "danger")
         return redirect(url_for("orders"))
 
@@ -953,7 +937,7 @@ def add_request():
     # إضافة الطلب
     new_request = Orders(
         customer_name=customer_name,
-        unit_type=property_type,
+        unit_type=unit_type,
         area=area_value,
         price=price_value,
         location=location,
@@ -966,7 +950,7 @@ def add_request():
     db.session.commit()
 
     # تسجيل العملية
-    log_action = f"إضافة طلب: {customer_name} - {property_type}"
+    log_action = f"إضافة طلب: {customer_name} - {unit_type}"
     log = Log(user=current_user.username, action=log_action)
     db.session.add(log)
     db.session.commit()
@@ -982,7 +966,7 @@ def edit_request(id):
     req = Orders.query.get_or_404(id)
     if request.method == "POST":
         customer_name = request.form.get("customer_name")
-        property_type = request.form.get("unit_type")
+        unit_type = request.form.get("unit_type")
         area = request.form.get("area")
         price = request.form.get("price")
         location = request.form.get("location")
@@ -991,7 +975,7 @@ def edit_request(id):
         notes = request.form.get("notes")
 
         # التحقق من الحقول المطلوبة
-        if not customer_name or not property_type:
+        if not customer_name or not unit_type:
             flash("الرجاء تعبئة الحقول المطلوبة (الاسم ونوع العقار)", "danger")
             return redirect(request.url)
 
@@ -1005,7 +989,7 @@ def edit_request(id):
 
         # تحديث البيانات
         req.customer_name = customer_name
-        req.unit_type = property_type
+        req.unit_type = unit_type
         req.area = area_value
         req.price = price_value
         req.location = location
