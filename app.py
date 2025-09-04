@@ -131,10 +131,6 @@ class Orders(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
 # ================== إدارة المستخدم ==================
-@login_manager.user_loader
-def load_user(user_id):
-    return Employee.query.get(int(user_id))
-
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
@@ -144,10 +140,14 @@ def login():
         if user and check_password_hash(user.password, password):
             login_user(user)
             flash(f"مرحباً {user.username}", "success")
-            return redirect(url_for('dashboard'))
+            
+            # إعادة التوجيه إلى next إذا موجودة، أو إلى dashboard
+            next_page = request.args.get('next')
+            return redirect(next_page or url_for('dashboard'))
         else:
             flash("اسم المستخدم أو كلمة المرور خاطئة", "danger")
     return render_template('login.html')
+
 
 @app.route('/logout')
 @login_required
