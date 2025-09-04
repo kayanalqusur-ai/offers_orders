@@ -632,9 +632,11 @@ def salesm_offers():
 @permission_required('salesm_offers_add')
 def add_salesm_offer():
     if request.method == "POST":
+        # جمع الصور
         images_files = request.files.getlist('images')
         images_filenames = [save_file(f) for f in images_files if f and f.filename]
 
+        # تحويل القيم الرقمية والتحقق منها
         try:
             area_value = float(request.form.get("area") or 0)
             price_value = float(request.form.get("price") or 0)
@@ -692,7 +694,7 @@ def edit_salesm_offer(offer_id):
 
         offer.unit_type  = request.form.get("unit_type")
         offer.floor      = request.form.get("floor")
-        offer.detals    = request.form.get("detalis")
+        offer.detalis    = request.form.get("detalis")
         offer.front      = request.form.get("front")
         offer.street     = request.form.get("street")
         offer.owner_type = request.form.get("owner_type")
@@ -1085,5 +1087,3 @@ if __name__ == '__main__':
 
     app.run(debug=True, host='0.0.0.0', port=5000)
 
-    # تشغيل السيرفر
-    app.run(debug=True, host="0.0.0.0", port=5000)
