@@ -11,6 +11,7 @@ from functools import wraps
 # ================== إعداد التطبيق ==================
 from config import Config
 
+# إنشاء تطبيق Flask أولاً
 app = Flask(__name__)
 app.config.from_object(Config)
 db = SQLAlchemy(app)
@@ -19,7 +20,10 @@ login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = 'login'
 
-# ================== إعداد الملفات ==================
+with app.app_context():
+    db.create_all()
+
+ # ================== إعداد الملفات ==================
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
 
 def allowed_file(filename):
@@ -1032,7 +1036,9 @@ def delete_request(id):
 # ================== تشغيل التطبيق ==================
 if __name__ == '__main__':
     with app.app_context():
+        # إنشاء جميع الجداول مرة واحدة
         db.create_all()
+        print("✅ تم إنشاء الجداول")
 
         # إنشاء أول مستخدم إذا لم يكن موجوداً
         if Employee.query.count() == 0:
@@ -1075,3 +1081,5 @@ if __name__ == '__main__':
 
     app.run(debug=True, host='0.0.0.0', port=5000)
 
+    # تشغيل السيرفر
+    app.run(debug=True, host="0.0.0.0", port=5000)
