@@ -25,15 +25,9 @@
                         <th>الطابق</th>
                         <th>المساحة</th>
                         <th>السوم</th>
-                        <th> حد البيع</th>
-                        <td>
-                         {% if offer.location %}
-                       <a href="https://www.google.com/maps?q={{ offer.location }}" target="_blank">عرض على الخريطة</a>
-                       {% else %}
-                             -
-                        {% endif %}
-                         </td>
-                         <th>التفاصيل</th>
+                        <th>حد البيع</th>
+                        <th>الموقع</th>
+                        <th>التفاصيل</th>
                         <th>المسوق</th>
                         <th>الحالة</th>
                         <th>تاريخ الإنشاء</th>
@@ -56,7 +50,13 @@
             <td>{{ offer.area or '-' }}</td>
             <td>{{ offer.price or '-' }}</td>
             <td>{{ offer.sale_limit or '-' }}</td>
-            <td>{{ offer.location or '-' }}</td>
+            <td>
+                {% if offer.location %}
+                    <a href="https://www.google.com/maps?q={{ offer.location | urlencode }}" target="_blank">عرض على الخريطة</a>
+                {% else %}
+                    -
+                {% endif %}
+            </td>
             <td>{{ offer.detalis or '-' }}</td>
             <td>{{ offer.marketer or '-' }}</td>
             <td>
@@ -89,10 +89,15 @@
         {% endfor %}
     {% else %}
         <tr>
-            <td colspan="11" class="text-center text-muted">لا توجد عروض حالياً</td>
+            <td colspan="12" class="text-center text-muted">لا توجد عروض حالياً</td>
         </tr>
     {% endif %}
 </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
 <script>
 document.addEventListener("DOMContentLoaded", function() {
     document.querySelectorAll(".offer-row").forEach(function(row) {
@@ -102,11 +107,4 @@ document.addEventListener("DOMContentLoaded", function() {
     });
 });
 </script>
-
-               
-                </tbody>
-            </table>
-        </div>
-    </div>
-</div>
 {% endblock %}
