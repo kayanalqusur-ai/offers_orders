@@ -522,6 +522,12 @@ def delete_rentalm_offer(offer_id):
     return redirect(url_for('rentalm_offers'))
 from flask import render_template, abort
 
+@app.route('/rental_offers/<district>/<int:offer_id>')
+@login_required
+def rental_offer_detail(district, offer_id):
+    offer = RentalOffer.query.filter_by(id=offer_id, district=district).first_or_404()
+    return render_template("rental_offers/detail.html", offer=offer, district=district)
+
 
 # ================== عروض الإيجار - جنوب ==================
 @app.route('/rentalw_offers')
@@ -627,31 +633,12 @@ def delete_rentalw_offer(offer_id):
     return redirect(url_for('rentalw_offers'))
 
 
-# ================== تفاصيل العرض (موحدة) ==================
-@app.route('/rental/<district>/<int:offer_id>')
+            # ================== تفاصيل العرض (موحدة) ==================
+@app.route('/rental_offers/<district>/<int:offer_id>')
+@login_required
 def rental_offer_detail(district, offer_id):
     offer = RentalOffer.query.filter_by(id=offer_id, district=district).first_or_404()
-
-    # تجهيز قائمة الصور
-    images = []
-    if offer.images:
-        try:
-            images = list(offer.images)
-        except Exception:
-            images = []
-
-    # إضافة الصور الفردية إذا كانت موجودة (لو فيه حقول image1 .. image5)
-    for i in range(1, 6):
-        img = getattr(offer, f'image{i}', None)
-        if img:
-            images.append(img)
-
-    return render_template(
-        'rental_offer_detail.html',
-        offer=offer,
-        district=district,
-        images=images
-    )
+    return render_template("rental_offers/detail.html", offer=offer, district=district)
 
 
 # ================== عروض البيع - وسط ==================
@@ -787,6 +774,12 @@ def sales_offer_detail(district, offer_id):
         district=district,
         district_name="المنطقة الوسطى" if district == "وسط" else "المنطقة الجنوبية"
     )
+
+@app.route('/rental_offers/<district>/<int:offer_id>')
+@login_required
+def rental_offer_detail(district, offer_id):
+    offer = RentalOffer.query.filter_by(id=offer_id, district=district).first_or_404()
+    return render_template("rental_offers/detail.html", offer=offer, district=district)
 
 
 # ================== عروض البيع - جنوب ==================
