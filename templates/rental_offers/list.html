@@ -35,7 +35,12 @@
                 <tbody>
     {% if offers %}
         {% for offer in offers %}
-        <tr class="offer-row" data-url="{{ url_for('rental_offer_detail', district=district, offer_id=offer.id) }}">
+        <tr class="offer-row"
+            data-url="{% if district == 'وسط' %}
+                          {{ url_for('rentalm_offer_detail', offer_id=offer.id) }}
+                      {% elif district == 'جنوب' %}
+                          {{ url_for('rentalw_offer_detail', offer_id=offer.id) }}
+                      {% endif %}">
             <td>
                 {% if offer.images %}
                     <img src="{{ url_for('uploaded_file', filename=offer.images[0]) }}" class="img-thumbnail" style="width:60px;height:60px;">
@@ -62,13 +67,21 @@
             <td>
                 <div class="d-flex gap-1">
                     {% if current_user.has_permission('rental' + district.replace('وسط','m').replace('جنوب','w') + '_offers_edit') %}
-                    <a href="{{ url_for('edit_rental' + district.replace('وسط','m').replace('جنوب','w') + '_offer', offer_id=offer.id) }}" 
+                    <a href="{% if district == 'وسط' %}
+                                 {{ url_for('edit_rentalm_offer', offer_id=offer.id) }}
+                              {% elif district == 'جنوب' %}
+                                 {{ url_for('edit_rentalw_offer', offer_id=offer.id) }}
+                              {% endif %}"
                        class="btn btn-sm btn-warning" onclick="event.stopPropagation();">
                         <i class="fas fa-edit"></i>
                     </a>
                     {% endif %}
                     {% if current_user.has_permission('rental' + district.replace('وسط','m').replace('جنوب','w') + '_offers_delete') %}
-                    <a href="{{ url_for('delete_rental' + district.replace('وسط','m').replace('جنوب','w') + '_offer', offer_id=offer.id) }}" 
+                    <a href="{% if district == 'وسط' %}
+                                 {{ url_for('delete_rentalm_offer', offer_id=offer.id) }}
+                              {% elif district == 'جنوب' %}
+                                 {{ url_for('delete_rentalw_offer', offer_id=offer.id) }}
+                              {% endif %}"
                        class="btn btn-sm btn-danger" onclick="event.stopPropagation(); return confirm('هل أنت متأكد من حذف هذا العرض؟')">
                         <i class="fas fa-trash"></i>
                     </a>
@@ -83,7 +96,6 @@
         </tr>
     {% endif %}
 </tbody>
-
 
 <script>
 document.addEventListener("DOMContentLoaded", function() {
