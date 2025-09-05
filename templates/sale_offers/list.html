@@ -25,7 +25,8 @@
                         <th>الطابق</th>
                         <th>المساحة</th>
                         <th>السوم</th>
-                        <th>آخر سعر</th>
+                        <th> حد البيع</th>
+                        <th>الموقع</th>
                         <th>التفاصيل</th>
                         <th>المسوق</th>
                         <th>الحالة</th>
@@ -49,6 +50,7 @@
             <td>{{ offer.area or '-' }}</td>
             <td>{{ offer.price or '-' }}</td>
             <td>{{ offer.sale_limit or '-' }}</td>
+            <td>{{ offer.location or '-' }}</td>
             <td>{{ offer.detalis or '-' }}</td>
             <td>{{ offer.marketer or '-' }}</td>
             <td>
