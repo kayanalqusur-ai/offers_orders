@@ -25,7 +25,14 @@
                         <th>الطابق</th>
                         <th>المساحة</th>
                         <th>السعر</th>
-                        <th>الموقع</th>
+                         <td>
+                        <td>
+                         {% if offer.location %}
+                       <a href="https://www.google.com/maps?q={{ offer.location }}" target="_blank">عرض على الخريطة</a>
+                       {% else %}
+                             -
+                        {% endif %}
+                         </td>
                         <th>التفاصيل</th>
                         <th>المسوق</th>
                         <th>الحالة</th>

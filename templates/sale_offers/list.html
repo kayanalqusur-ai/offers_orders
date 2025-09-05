@@ -26,8 +26,14 @@
                         <th>المساحة</th>
                         <th>السوم</th>
                         <th> حد البيع</th>
-                        <th>الموقع</th>
-                        <th>التفاصيل</th>
+                        <td>
+                         {% if offer.location %}
+                       <a href="https://www.google.com/maps?q={{ offer.location }}" target="_blank">عرض على الخريطة</a>
+                       {% else %}
+                             -
+                        {% endif %}
+                         </td>
+                         <th>التفاصيل</th>
                         <th>المسوق</th>
                         <th>الحالة</th>
                         <th>تاريخ الإنشاء</th>
