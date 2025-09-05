@@ -11,8 +11,8 @@
     <p><strong>نوع الوحدة:</strong> {{ offer.unit_type }}</p>
     <p><strong>المساحة:</strong> {{ offer.area or '-' }}</p>
     <p><strong>الطابق:</strong> {{ offer.floor }}</p>
-    <p><strong>السعر:</strong> {{ offer.price or '-' }}</p>
-    <p><strong>السوم:</strong> {{ offer.sale_limit or '-' }}</p>
+    <p><strong>السوم:</strong> {{ offer.price or '-' }}</p>
+    <p><strong>حد البيع:</strong> {{ offer.sale_limit or '-' }}</p>
     {% if offer.location %}
         <a href="{{ offer.location }}" target="_blank">{{ offer.location }}</a>
      {% else %}
