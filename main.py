@@ -25,13 +25,15 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['UPLOAD_FOLDER'] = os.path.join(os.path.dirname(__file__), 'uploads')
 os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 
-# ================== استيراد الإضافات ==================
-from extensions import db
+from extensions import db, migrate
 
 # ربط db بالـ app
 db.init_app(app)
 
-# ================== استيراد النماذج بعد تهيئة db ==================
+# تهيئة الميجرات
+migrate.init_app(app, db)
+
+# استيراد النماذج بعد تهيئة db
 from models import Employee, Log, Property, RentalOffer, SaleOffer, RentalMOffer, RentalWOffer, Orders
 
 # ================== تهيئة تسجيل الدخول ==================
