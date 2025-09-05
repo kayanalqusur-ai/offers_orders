@@ -1,6 +1,7 @@
 import os
 from datetime import datetime
 from functools import wraps
+from extensions import db, migrate
 
 from flask import (
     Flask, render_template, request, redirect,
@@ -894,6 +895,3 @@ if __name__ == "__main__":
             db.session.commit()
             print("✅ تم إنشاء المستخدم الأول: admin / admin123")
 
-    # تشغيل التطبيق
-    port = int(os.environ.get("PORT", 5000))
-    app.run(host="0.0.0.0", port=port, debug=True)
