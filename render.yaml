@@ -2,10 +2,14 @@ services:
   - type: web
     name: offers-orders
     env: python
+    # أوامر البناء قبل تشغيل الخدمة
     buildCommand: |
+      pip install --upgrade pip
       pip install -r requirements.txt
       flask db upgrade
-    startCommand: gunicorn main:app
+    # أمر تشغيل التطبيق
+    startCommand: gunicorn main:app --bind 0.0.0.0:$PORT
+    # متغيرات البيئة
     envVars:
       - key: FLASK_APP
         value: main.py
@@ -15,3 +19,10 @@ services:
         fromDatabase:
           name: mydb
           property: connectionString
+    # إعدادات إضافية للأداء والاستقرار
+    autoDeploy: true          # تحديث تلقائي عند push إلى GitHub
+    plan: starter             # يمكنك تغييره حسب خطتك
+    instances: 1              # عدد النسخ المشغلة
+    healthCheckPath: "/"      # للتحقق من أن التطبيق يعمل
+    memory: 512               # تخصيص الذاكرة (ميجابايت)
+    cpu: 1                    # تخصيص وحدة المعالجة المركزية (vCPU)
