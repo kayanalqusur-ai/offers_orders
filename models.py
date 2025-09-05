@@ -1,17 +1,18 @@
-from flask_sqlalchemy import SQLAlchemy
+from extensions import db
 from flask_login import UserMixin
 from datetime import datetime
 import json
 
-db = SQLAlchemy()
 
 class Employee(db.Model, UserMixin):
+    __tablename__ = 'employee'
+    __table_args__ = {'extend_existing': True}
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(150), nullable=False)
     role = db.Column(db.String(100), nullable=False)
     username = db.Column(db.String(150), unique=True, nullable=False)
     password = db.Column(db.String(200), nullable=False)
-    permissions = db.Column(db.Text, default='[]')  # تخزين الصلاحيات كـ JSON
+    permissions = db.Column(db.Text, default='[]')
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
     def set_permissions(self, perms_list):
@@ -29,6 +30,8 @@ class Employee(db.Model, UserMixin):
 
 
 class Log(db.Model):
+    __tablename__ = 'log'
+    __table_args__ = {'extend_existing': True}
     id = db.Column(db.Integer, primary_key=True)
     user = db.Column(db.String(150))
     action = db.Column(db.String(500))
@@ -36,6 +39,8 @@ class Log(db.Model):
 
 
 class Property(db.Model):
+    __tablename__ = 'property'
+    __table_args__ = {'extend_existing': True}
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(200), nullable=False)
     type = db.Column(db.String(100))
@@ -48,6 +53,8 @@ class Property(db.Model):
 
 
 class RentalOffer(db.Model):
+    __tablename__ = 'rental_offer'
+    __table_args__ = {'extend_existing': True}
     id = db.Column(db.Integer, primary_key=True)
     property_id = db.Column(db.Integer, db.ForeignKey('property.id'))
     property = db.relationship("Property", backref="rental_offers")
@@ -68,26 +75,31 @@ class RentalOffer(db.Model):
 
 
 class SaleOffer(db.Model):
+    __tablename__ = 'sale_offer'
+    __table_args__ = {'extend_existing': True}
     id = db.Column(db.Integer, primary_key=True)
-    unit_type = db.Column(db.String(100))      
-    district = db.Column(db.String(50))      
-    area = db.Column(db.Float)             
-    floor = db.Column(db.String(50))       
-    front = db.Column(db.String(50))       
-    street = db.Column(db.String(50))      
-    price = db.Column(db.Float)            
-    sale_limit = db.Column(db.Float)            
-    location = db.Column(db.String(300))      
-    detalis = db.Column(db.Text)             
-    marketer = db.Column(db.String(100))     
-    owner_type = db.Column(db.String(50))        
-    status = db.Column(db.String(50))       
+    unit_type = db.Column(db.String(100))
+    district = db.Column(db.String(50))
+    area = db.Column(db.Float)
+    floor = db.Column(db.String(50))
+    front = db.Column(db.String(50))
+    street = db.Column(db.String(50))
+    price = db.Column(db.Float)
+    sale_limit = db.Column(db.Float)
+    location = db.Column(db.String(300))
+    detalis = db.Column(db.Text)
+    marketer = db.Column(db.String(100))
+    owner_type = db.Column(db.String(50))
+    status = db.Column(db.String(50))
     images = db.Column(db.PickleType)
-    notes = db.Column(db.Text)             
-    created_by = db.Column(db.String(100))      
+    notes = db.Column(db.Text)
+    created_by = db.Column(db.String(100))
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
+
 class RentalMOffer(db.Model):
+    __tablename__ = 'rental_m_offer'
+    __table_args__ = {'extend_existing': True}
     id = db.Column(db.Integer, primary_key=True)
     unit_type = db.Column(db.String(100))
     area = db.Column(db.Float)
@@ -105,7 +117,10 @@ class RentalMOffer(db.Model):
     image4 = db.Column(db.String(200))
     image5 = db.Column(db.String(200))
 
+
 class RentalWOffer(db.Model):
+    __tablename__ = 'rental_w_offer'
+    __table_args__ = {'extend_existing': True}
     id = db.Column(db.Integer, primary_key=True)
     unit_type = db.Column(db.String(100))
     area = db.Column(db.Float)
@@ -122,8 +137,11 @@ class RentalWOffer(db.Model):
     image3 = db.Column(db.String(200))
     image4 = db.Column(db.String(200))
     image5 = db.Column(db.String(200))
-    
+
+
 class Orders(db.Model):
+    __tablename__ = 'orders'
+    __table_args__ = {'extend_existing': True}
     id = db.Column(db.Integer, primary_key=True)
     customer_name = db.Column(db.String(100), nullable=False)
     unit_type = db.Column(db.String(100), nullable=False)

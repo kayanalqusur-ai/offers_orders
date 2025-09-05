@@ -2,211 +2,95 @@ import os
 import json
 from datetime import datetime
 from functools import wraps
-from flask import Flask
-from flask_sqlalchemy import SQLAlchemy
 
-from flask import Flask, render_template, request, redirect, url_for, flash, send_from_directory, abort
-from flask_sqlalchemy import SQLAlchemy
+from flask import (
+    Flask, render_template, request, redirect,
+    url_for, flash, send_from_directory, abort
+)
 from flask_login import (
     LoginManager, login_user, login_required,
     logout_user, UserMixin, current_user
 )
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
-from sqlalchemy import func
 
-from models import RentalOffer
+# ================== استيراد الإضافات والنماذج ==================
+from extensions import db
+from models import Employee, Log, Property, RentalOffer, SaleOffer, RentalMOffer, RentalWOffer, Orders
 
-# ================== إعداد التطبيق ==================
+# ================== تهيئة التطبيق ==================
 app = Flask(__name__)
 app.secret_key = os.environ.get("SESSION_SECRET", "your_secret_key_here")
-app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get("DATABASE_URL", "sqlite:///database.db")
-app.config['UPLOAD_FOLDER'] = 'uploads'
+app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get(
+    "DATABASE_URL", "sqlite:///database.db"
+)
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
-db = SQLAlchemy(app)
+# مجلد رفع الملفات
+app.config['UPLOAD_FOLDER'] = os.path.join(os.path.dirname(__file__), 'uploads')
+os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 
-login_manager = LoginManager()
-login_manager.init_app(app)
-login_manager.login_view = 'login'  # الصفحة التي يتم إعادة التوجيه إليها عند عدم تسجيل الدخول
+# ربط db بالـ app
+db.init_app(app)
 
-# ================== ملفات وصلاحيات ==================
+# تهيئة تسجيل الدخول
+login_manager = LoginManager(app)
+login_manager.login_view = 'login'
+
+# ================== تحميل المستخدم ==================
+@login_manager.user_loader
+def load_user(user_id):
+    from models import Employee  # تجنب circular import
+    return Employee.query.get(int(user_id))
+
+# ================== صلاحيات وملفات ==================
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
 
 def allowed_file(filename):
+    """التحقق من امتداد الملف المسموح به"""
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 def save_file(file):
+    """حفظ الملف في مجلد الرفع وإعادة اسم الملف المحفوظ"""
     if not file or not file.filename:
         return None
     filename = datetime.now().strftime("%Y-%m-%d_%H%M%S") + "_" + secure_filename(file.filename)
-    os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
     file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
     return filename
 
 def remove_files(files_list):
+    """حذف الملفات من مجلد الرفع"""
     if not files_list:
         return
     for f in files_list:
         try:
             os.remove(os.path.join(app.config['UPLOAD_FOLDER'], f))
-        except:
+        except FileNotFoundError:
             pass
+        except Exception as e:
+            print(f"خطأ عند حذف الملف {f}: {e}")
 
 def permission_required(permission):
+    """ديكوريتور للتحقق من صلاحيات المستخدم قبل تنفيذ الدالة"""
     def decorator(f):
         @wraps(f)
         def decorated_function(*args, **kwargs):
-            if not current_user.has_permission(permission):
+            if not current_user.is_authenticated or not current_user.has_permission(permission):
                 flash("🚫 ليس لديك صلاحية", "danger")
                 return redirect(url_for("dashboard"))
             return f(*args, **kwargs)
         return decorated_function
     return decorator
 
-
-# ================== النماذج ==================
-class Employee(db.Model, UserMixin):
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(150), nullable=False)
-    role = db.Column(db.String(100), nullable=False)
-    username = db.Column(db.String(150), unique=True, nullable=False)
-    password = db.Column(db.String(200), nullable=False)
-    permissions = db.Column(db.Text, default='[]')
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
-
-    def set_permissions(self, perms_list, commit=True):
-        """تعيين الصلاحيات للمستخدم على شكل JSON"""
-        self.permissions = json.dumps([str(p) for p in perms_list])
-        if commit:
-            db.session.commit()
-
-        # تحديث الجلسة إذا كان هذا المستخدم هو الحالي
-        try:
-            if current_user and current_user.is_authenticated and current_user.id == self.id:
-                login_user(self, fresh=True)
-        except Exception:
-            pass
-
-    def get_permissions(self):
-        """إرجاع قائمة الصلاحيات للمستخدم"""
-        try:
-            perms = json.loads(self.permissions or '[]')
-            return [str(p) for p in perms] if isinstance(perms, list) else []
-        except json.JSONDecodeError:
-            return []
-
-    def has_permission(self, perm):
-        """التحقق مما إذا كان المستخدم لديه صلاحية معينة"""
-        return str(perm) in self.get_permissions()
-
-class Log(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    user = db.Column(db.String(150))
-    action = db.Column(db.String(500))
-    timestamp = db.Column(db.DateTime, default=datetime.utcnow)
+# ================== مثال لإنشاء الجداول ==================
+# يمكنك تشغيل هذا مرة واحدة لتوليد الجداول
+if __name__ == "__main__":
+    with app.app_context():
+        db.create_all()
+        print("✅ جميع الجداول تم إنشاؤها بنجاح")
 
 
-class Property(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(200), nullable=False)
-    type = db.Column(db.String(100))
-    district = db.Column(db.String(100))
-    area = db.Column(db.Float)
-    front = db.Column(db.String(50))
-    street = db.Column(db.String(100))
-    owner_status = db.Column(db.String(50))
-    images = db.Column(db.PickleType)  # يمكن تغييرها لاحقًا إلى JSON إذا رغبت
 
-
-class RentalOffer(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    property_id = db.Column(db.Integer, db.ForeignKey('property.id'))
-    property = db.relationship("Property", backref="rental_offers")
-    unit_type = db.Column(db.String(100))
-    floor = db.Column(db.String(50))
-    area = db.Column(db.Float)
-    price = db.Column(db.Float)
-    detalis = db.Column(db.String(50))
-    owner_type = db.Column(db.String(50))
-    location = db.Column(db.String(200))
-    marketer = db.Column(db.String(100))
-    notes = db.Column(db.Text)
-    status = db.Column(db.String(50))
-    images = db.Column(db.PickleType)
-    district = db.Column(db.String(50))
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
-
-
-class SaleOffer(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    unit_type = db.Column(db.String(100))
-    district = db.Column(db.String(50))
-    area = db.Column(db.Float)
-    floor = db.Column(db.String(50))
-    front = db.Column(db.String(50))
-    street = db.Column(db.String(50))
-    price = db.Column(db.Float)
-    sale_limit = db.Column(db.Float)
-    location = db.Column(db.String(300))
-    detalis = db.Column(db.Text)
-    marketer = db.Column(db.String(100))
-    owner_type = db.Column(db.String(50))
-    status = db.Column(db.String(50))
-    images = db.Column(db.PickleType)
-    notes = db.Column(db.Text)
-    created_by = db.Column(db.String(100))
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
-
-class RentalMOffer(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    unit_type = db.Column(db.String(100))
-    area = db.Column(db.Float)
-    floor = db.Column(db.String(50))
-    detalis = db.Column(db.Text)
-    price = db.Column(db.Float)
-    location = db.Column(db.String(200))
-    owner_type = db.Column(db.String(50))
-    marketer = db.Column(db.String(100))
-    status = db.Column(db.String(50))
-    notes = db.Column(db.Text)
-    image1 = db.Column(db.String(200))
-    image2 = db.Column(db.String(200))
-    image3 = db.Column(db.String(200))
-    image4 = db.Column(db.String(200))
-    image5 = db.Column(db.String(200))
-
-class RentalWOffer(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    unit_type = db.Column(db.String(100))
-    area = db.Column(db.Float)
-    floor = db.Column(db.String(50))
-    detalis = db.Column(db.Text)
-    price = db.Column(db.Float)
-    location = db.Column(db.String(200))
-    owner_type = db.Column(db.String(50))
-    marketer = db.Column(db.String(100))
-    status = db.Column(db.String(50))
-    notes = db.Column(db.Text)
-    image1 = db.Column(db.String(200))
-    image2 = db.Column(db.String(200))
-    image3 = db.Column(db.String(200))
-    image4 = db.Column(db.String(200))
-    image5 = db.Column(db.String(200))
-
-
-class Orders(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    customer_name = db.Column(db.String(100), nullable=False)
-    unit_type = db.Column(db.String(100), nullable=False)
-    area = db.Column(db.Integer, nullable=True)
-    price = db.Column(db.Float, nullable=True)
-    location = db.Column(db.String(200), nullable=True)
-    phone = db.Column(db.String(20), nullable=True)
-    marketer = db.Column(db.String(100), nullable=True)
-    notes = db.Column(db.Text, nullable=True)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
 # ================== إعدادات تسجيل الدخول ==================
 @login_manager.user_loader
