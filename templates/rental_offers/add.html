@@ -1,0 +1,115 @@
+{% extends "base.html" %}
+
+{% block title %}
+{% if offer %}تعديل عرض إيجار - {{ district_name }}{% else %}نشر عرض إيجار جديد - {{ district_name }}{% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>
+        <i class="fas fa-key"></i>
+        {% if offer %}تعديل عرض إيجار - {{ district_name }}{% else %}نشر عرض إيجار جديد - {{ district_name }}{% endif %}
+    </h2>
+    <hr>
+
+    <form method="POST" 
+          action="{% if offer %}{{ url_for('edit_rental' + district.replace('وسط','m').replace('جنوب','w') + '_offer', offer_id=offer.id) }}{% else %}{{ url_for('add_rental' + district.replace('وسط','m').replace('جنوب','w') + '_offer') }}{% endif %}" 
+          enctype="multipart/form-data">
+
+        <!-- نوع الوحدة -->
+        <div class="mb-3">
+            <label for="unit_type" class="form-label">نوع الوحدة <span class="text-danger">*</span></label>
+            <input type="text" name="unit_type" id="unit_type" class="form-control" 
+                   value="{{ offer.unit_type if offer else '' }}" required>
+        </div>
+
+        <!-- المساحة والطابق -->
+        <div class="row mb-3">
+            <div class="col-md-6">
+                <label for="area" class="form-label">المساحة (م²)</label>
+                <input type="number" name="area" id="area" class="form-control" 
+                       value="{{ offer.area if offer else '' }}">
+            </div>
+            <div class="col-md-6">
+                <label for="floor" class="form-label">الطابق</label>
+                <input type="text" name="floor" id="floor" class="form-control" 
+                       value="{{ offer.floor if offer else '' }}">
+            </div>
+        </div>
+
+        <!-- تفاصيل العقار -->
+        <div class="mb-3">
+            <label for="detalis" class="form-label">تفاصيل العقار</label>
+            <textarea name="detalis" id="detalis" rows="3" class="form-control">{{ offer.detalis if offer else '' }}</textarea>
+        </div>
+
+        <!-- السعر والموقع -->
+        <div class="row mb-3">
+            <div class="col-md-6">
+                <label for="price" class="form-label">سعر الإيجار</label>
+                <input type="number" name="price" id="price" class="form-control" 
+                       value="{{ offer.price if offer else '' }}">
+            </div>
+            <div class="col-md-6">
+                <label for="location" class="form-label">الموقع</label>
+                <input type="text" name="location" id="location" class="form-control" 
+                       placeholder="رابط الخريطة" value="{{ offer.location if offer else '' }}">
+            </div>
+        </div>
+
+        <!-- نوع المالك والمسوق -->
+        <div class="row mb-3">
+            <div class="col-md-6">
+                <label for="owner_type" class="form-label">صفة مالك العقار</label>
+                <select name="owner_type" id="owner_type" class="form-select">
+                    {% set owner_types = ['مالك مباشر','وسيط','وكيل'] %}
+                    {% for ot in owner_types %}
+                    <option value="{{ ot }}" {% if offer and offer.owner_type == ot %}selected{% endif %}>{{ ot }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-6">
+                <label for="marketer" class="form-label">اسم المسوق</label>
+                <input type="text" name="marketer" id="marketer" class="form-control" 
+                       value="{{ offer.marketer if offer else '' }}">
+            </div>
+        </div>
+
+        <!-- ملاحظات وحالة العرض -->
+        <div class="row mb-3">
+            <div class="col-md-6">
+                <label for="notes" class="form-label">ملاحظات</label>
+                <textarea name="notes" id="notes" rows="2" class="form-control">{{ offer.notes if offer else '' }}</textarea>
+            </div>
+            <div class="col-md-6">
+                <label for="status" class="form-label">حالة العرض</label>
+                <select name="status" id="status" class="form-select">
+                    {% set statuses = ['متاح','عربون','غير متاح'] %}
+                    {% for st in statuses %}
+                    <option value="{{ st }}" {% if offer and offer.status == st %}selected{% endif %}>{{ st }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+
+        <!-- رفع الصور -->
+        <div class="mb-3">
+            <label class="form-label">صور العرض (1-5)</label>
+            {% for i in range(1,6) %}
+                <input type="file" name="image{{ i }}" accept="image/*" class="form-control mb-1">
+                {% if offer and offer.images and offer.images|length >= i %}
+                    <small>الصورة الحالية: {{ offer.images[i-1] }}</small>
+                {% endif %}
+            {% endfor %}
+        </div>
+
+        <!-- الأزرار -->
+        <button type="submit" class="btn btn-primary">
+            {% if offer %}💾 تحديث العرض{% else %}📌 نشر العرض{% endif %}
+        </button>
+        <a href="{% if district=='وسط' %}{{ url_for('rentalm_offers') }}{% else %}{{ url_for('rentalw_offers') }}{% endif %}" class="btn btn-secondary">
+            ⬅ العودة لقائمة عروض الإيجار
+        </a>
+    </form>
+</div>
+{% endblock %}

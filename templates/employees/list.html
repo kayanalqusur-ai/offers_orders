@@ -1,213 +1,123 @@
-<!DOCTYPE html>
-<html lang="ar" dir="rtl">
-<head>
-    <meta charset="UTF-8">
-    <title>إدارة الموظفين</title>
-    <link href="https://fonts.googleapis.com/css2?family=Cairo&display=swap" rel="stylesheet">
-    <style>
-    body{font-family:'Cairo',sans-serif;background:#ecf0f1;margin:0}
-    nav{background:#ecf0f1;padding:10px 40px}
-    nav ul{display:flex;gap:20px;list-style:none;margin:0;padding:0}
-    nav a{color:#2c3e50;text-decoration:none;font-weight:bold;padding:8px 15px;border-radius:8px;transition:.3s}
-    nav a:hover{background:#3498db;color:#fff}
-    .navbar{background:#34495e;color:#fff;padding:15px;text-align:center;font-size:24px}
+{% extends "base.html" %}
 
-        .container {
-            max-width: 1000px;
-            margin: 30px auto;
-            padding: 20px;
-        }
+{% block title %}إدارة الموظفين{% endblock %}
 
-        .card {
-            background-color: #fff;
-            border-radius: 12px;
-            padding: 25px;
-            margin-bottom: 30px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-        }
-
-        .card h2 {
-            margin-bottom: 20px;
-            color: #34495e;
-        }
-
-        form {
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-        }
-
-        input[type="text"], input[type="password"] {
-            width: 100%;
-            padding: 10px;
-            border-radius: 8px;
-            border: 1px solid #ccc;
-            font-size: 14px;
-        }
-
-        .permissions {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-            gap: 8px;
-            margin-top: 10px;
-            margin-bottom: 20px;
-            padding: 10px;
-            border-radius: 8px;
-            background-color: #f9f9f9;
-            border: 1px solid #ddd;
-        }
-
-        .permissions label {
-            font-weight: normal;
-            display: flex;
-            align-items: center;
-        }
-
-        .permissions input[type="checkbox"] {
-            margin-left: 8px;
-        }
-
-        .btn {
-            padding: 12px;
-            font-size: 15px;
-            background-color: #3498db;
-            color: white;
-            border: none;
-            border-radius: 10px;
-            cursor: pointer;
-            transition: background-color 0.3s;
-        }
-
-        .btn:hover {
-            background-color: #2980b9;
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 14px;
-        }
-
-        th, td {
-            text-align: center;
-            padding: 12px 10px;
-            border-bottom: 1px solid #ddd;
-        }
-
-        th {
-            background-color: #3498db;
-            color: white;
-        }
-
-        .action-buttons {
-            display: flex;
-            justify-content: center;
-            gap: 10px;
-        }
-
-        .edit-btn { background-color: #f39c12; padding: 6px 12px; border-radius: 6px; color: white; text-decoration: none;}
-        .edit-btn:hover { background-color: #e67e22; }
-
-        .delete-btn { background-color: #e74c3c; padding: 6px 12px; border-radius: 6px; color: white; text-decoration: none;}
-        .delete-btn:hover { background-color: #c0392b; }
-
-        .badge {
-            display: inline-block;
-            background-color: #ecf0f1;
-            padding: 3px 6px;
-            margin: 2px;
-            border-radius: 6px;
-            font-size: 12px;
-        }
-    </style>
-</head>
-<body>
-
-<div class="navbar">👥 إدارة الموظفين</div>
-
-<nav>
-    <ul>
-        <li><a href="{{ url_for('dashboard') }}">الرئيسية</a></li>
-        <li><a href="{{ url_for('list_employees') }}">الموظفين</a></li>
-        <li><a href="{{ url_for('rentalm_offers') }}">عروض وسط الرياض للإيجار</a></li>
-        <li><a href="{{ url_for('rentalw_offers') }}">عروض جنوب الرياض للإيجار</a></li>
-        <li><a href="{{ url_for('salesm_offers') }}">عروض وسط الرياض للبيع</a></li>
-        <li><a href="{{ url_for('salesw_offers') }}">عروض جنوب الرياض للبيع</a></li>
-        <li><a href="{{ url_for('orders') }}">الطلبات</a></li>
-        <li><a href="{{ url_for('view_logs') }}">عرض السجلات</a></li>
-        <li><a href="{{ url_for('logout') }}">تسجيل الخروج</a></li>
-    </ul>
-</nav>
-
-<div class="container">
-
-    <!-- إضافة / تعديل موظف -->
-    <div class="card">
-        <h2>{{ 'تعديل موظف' if employee else 'إضافة موظف جديد' }}</h2>
-        <form method="POST">
-            <input type="text" name="name" placeholder="اسم الموظف" value="{{ employee.name if employee else '' }}" required>
-            <input type="text" name="role" placeholder="الوظيفة" value="{{ employee.role if employee else '' }}" required>
-            <input type="text" name="username" placeholder="اسم المستخدم" value="{{ employee.username if employee else '' }}" required>
-            <input type="password" name="password" placeholder="كلمة المرور" {% if not employee %}required{% endif %} autocomplete="off">
-
-            <label>صلاحيات الوصول:</label>
-            <div class="permissions">
-                {% set perms = employee.get_permissions() if employee else [] %}
-                {% for value, label in available_permissions %}
-                    <label>
-                        <input type="checkbox" name="permissions[]" value="{{ value }}" {% if value in perms %}checked{% endif %}>
-                        {{ label }}
-                    </label>
-                {% endfor %}
-            </div>
-
-            <button type="submit" class="btn">{{ 'تحديث' if employee else 'إضافة' }}</button>
-        </form>
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center">
+            <h2><i class="fas fa-users"></i> إدارة الموظفين</h2>
+            {% if current_user.has_permission('add_employee') %}
+            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#employeeModal">
+                <i class="fas fa-plus"></i> إضافة موظف
+            </button>
+            {% endif %}
+        </div>
+        <hr>
     </div>
-
-    <!-- قائمة الموظفين -->
-    <div class="card">
-        <h2>قائمة الموظفين</h2>
-        <table>
-            <thead>
-                <tr>
-                    <th>الاسم</th>
-                    <th>الوظيفة</th>
-                    <th>اسم المستخدم</th>
-                    <th>الصلاحيات</th>
-                    <th>التحكم</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for emp in employees %}
-                <tr>
-                    <td>{{ emp.name }}</td>
-                    <td>{{ emp.role }}</td>
-                    <td>{{ emp.username }}</td>
-                    <td>
-                        {% for perm_val in emp.get_permissions() %}
-                            {% for value, label in available_permissions %}
-                                {% if perm_val == value %}
-                                    <span class="badge">{{ label }}</span>
-                                {% endif %}
-                            {% endfor %}
-                        {% endfor %}
-                    </td>
-                    <td class="action-buttons">
-                        <a href="{{ url_for('edit_employee', employee_id=emp.id) }}" class="edit-btn">تعديل</a>
-                        <a href="{{ url_for('delete_employee', employee_id=emp.id) }}" class="delete-btn" onclick="return confirm('هل أنت متأكد من الحذف؟')">حذف</a>
-                    </td>
-                </tr>
-                {% else %}
-                <tr>
-                    <td colspan="5">لا يوجد موظفين حالياً</td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    </div>
-
 </div>
 
-</body>
-</html>
+<div class="row">
+    <div class="col-12">
+        <div class="table-responsive">
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>الاسم</th>
+                        <th>الوظيفة</th>
+                        <th>اسم المستخدم</th>
+                        <th>تاريخ الإنشاء</th>
+                        <th>الإجراءات</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for emp in employees %}
+                    <tr>
+                        <td>{{ emp.name }}</td>
+                        <td>{{ emp.role }}</td>
+                        <td>{{ emp.username }}</td>
+                        <td>{{ emp.created_at.strftime('%Y-%m-%d') }}</td>
+                        <td>
+                            {% if current_user.has_permission('edit_employee') %}
+                            <a href="{{ url_for('edit_employee', id=emp.id) }}">تعديل</a>
+                            </a>
+                            {% endif %}
+
+                               {% if current_user.has_permission('delete_employee') and emp.id != current_user.id %}
+                            <form action="{{ url_for('delete_employee', employee_id=emp.id) }}" method="POST" style="display:inline;">
+                                <button type="submit" class="btn btn-sm btn-danger"
+                                        onclick="return confirm('هل أنت متأكد من حذف هذا الموظف؟')">
+                                    <i class="fas fa-trash"></i> حذف
+                                </button>
+                            </form>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Modal لإضافة موظف جديد -->
+<div class="modal fade" id="employeeModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">إضافة موظف جديد</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="POST" action="{{ url_for('add_employee') }}">
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">الاسم</label>
+                                <input type="text" class="form-control" name="name" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">الوظيفة</label>
+                                <input type="text" class="form-control" name="role" required>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">اسم المستخدم</label>
+                                <input type="text" class="form-control" name="username" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">كلمة المرور</label>
+                                <input type="password" class="form-control" name="password" required>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">الصلاحيات</label>
+                        <div class="row">
+                            {% for perm_id, perm_name in available_permissions %}
+                            <div class="col-md-6">
+                                <div class="form-check">
+                                    <input type="checkbox" class="form-check-input" name="permissions[]" value="{{ perm_id }}" id="perm_{{ perm_id }}">
+                                    <label class="form-check-label" for="perm_{{ perm_id }}">{{ perm_name }}</label>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+                    <button type="submit" class="btn btn-primary">حفظ</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

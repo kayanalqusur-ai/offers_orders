@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+
+{% block title %}إضافة طلب جديد{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <h2>➕ إضافة طلب جديد</h2>
+        <hr>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-12">
+        <div class="card border-primary">
+            <div class="card-header bg-primary text-white">نموذج إضافة الطلب</div>
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('add_request') }}">
+                    <div class="mb-3">
+                        <label>اسم العميل <span class="text-danger">*</span></label>
+                        <input type="text" name="customer_name" required class="form-control" placeholder="أدخل اسم العميل">
+                    </div>
+                    <div class="mb-3">
+                        <label>نوع العقار <span class="text-danger">*</span></label>
+                        <input type="text" name="unit_type" required class="form-control" placeholder="مثل: شقة، فيلا">
+                    </div>
+                    <div class="mb-3">
+                        <label>المساحة (م²)</label>
+                        <input type="number" name="area" class="form-control" placeholder="مثال: 120">
+                    </div>
+                    <div class="mb-3">
+                        <label>المبلغ</label>
+                        <input type="number" name="price" class="form-control" placeholder="مثال: 50000">
+                    </div>
+                    <div class="mb-3">
+                        <label>الأحياء</label>
+                        <input type="text" name="location" class="form-control" placeholder="مثل: وسط الرياض">
+                    </div>
+                    <div class="mb-3">
+                        <label>رقم الهاتف</label>
+                        <input type="text" name="phone" class="form-control" placeholder="مثل: 0551234567">
+                    </div>
+                    <div class="mb-3">
+                        <label>المسوق</label>
+                        <input type="text" name="marketer" class="form-control" placeholder="اسم المسوق إذا وجد">
+                    </div>
+                    <div class="mb-3">
+                        <label>ملاحظات</label>
+                        <textarea name="notes" class="form-control" rows="3" placeholder="أي ملاحظات إضافية"></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary">➕ حفظ الطلب</button>
+                    <a href="{{ url_for('orders') }}" class="btn btn-secondary">إلغاء</a>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

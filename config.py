@@ -2,7 +2,7 @@ import os
 
 class Config:
     # مفتاح التشفير
-    SECRET_KEY = os.environ.get("SECRET_KEY", "dev-secret")
+    SECRET_KEY = os.environ.get("SESSION_SECRET", "dev-secret-key-change-in-production")
 
     # قاعدة البيانات
     db_url = os.environ.get("DATABASE_URL", "sqlite:///database.db")
