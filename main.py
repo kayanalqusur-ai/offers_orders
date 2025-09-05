@@ -633,14 +633,6 @@ def delete_rentalw_offer(offer_id):
     return redirect(url_for('rentalw_offers'))
 
 
-            # ================== تفاصيل العرض (موحدة) ==================
-@app.route('/rental_offers/<district>/<int:offer_id>')
-@login_required
-def rental_offer_detail(district, offer_id):
-    offer = RentalOffer.query.filter_by(id=offer_id, district=district).first_or_404()
-    return render_template("rental_offers/detail.html", offer=offer, district=district)
-
-
 # ================== عروض البيع - وسط ==================
 @app.route('/salesm_offers')
 @login_required
@@ -775,11 +767,6 @@ def sales_offer_detail(district, offer_id):
         district_name="المنطقة الوسطى" if district == "وسط" else "المنطقة الجنوبية"
     )
 
-@app.route('/rental_offers/<district>/<int:offer_id>')
-@login_required
-def rental_offer_detail(district, offer_id):
-    offer = RentalOffer.query.filter_by(id=offer_id, district=district).first_or_404()
-    return render_template("rental_offers/detail.html", offer=offer, district=district)
 
 
 # ================== عروض البيع - جنوب ==================
