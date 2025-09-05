@@ -1,3 +1,4 @@
+# config.py
 import os
 
 class Config:
@@ -5,7 +6,10 @@ class Config:
     SECRET_KEY = os.environ.get("SESSION_SECRET", "dev-secret-key-change-in-production")
 
     # قاعدة البيانات
-    db_url = os.environ.get("DATABASE_URL", "sqlite:///database.db")
+    db_url = os.environ.get(
+        "DATABASE_URL",
+        "postgresql://offers_orders:qkiEgdvonowQqG5psQD4Rik2QvDdV4SA@dpg-d2t7pimuk2gs73cjkkdg-a.oregon-postgres.render.com/offers_orders"
+    )
     if db_url.startswith("postgres://"):
         db_url = db_url.replace("postgres://", "postgresql://", 1)
     SQLALCHEMY_DATABASE_URI = db_url
