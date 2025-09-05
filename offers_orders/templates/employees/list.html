@@ -1,0 +1,123 @@
+{% extends "base.html" %}
+
+{% block title %}إدارة الموظفين{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center">
+            <h2><i class="fas fa-users"></i> إدارة الموظفين</h2>
+            {% if current_user.has_permission('add_employee') %}
+            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#employeeModal">
+                <i class="fas fa-plus"></i> إضافة موظف
+            </button>
+            {% endif %}
+        </div>
+        <hr>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-12">
+        <div class="table-responsive">
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>الاسم</th>
+                        <th>الوظيفة</th>
+                        <th>اسم المستخدم</th>
+                        <th>تاريخ الإنشاء</th>
+                        <th>الإجراءات</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for emp in employees %}
+                    <tr>
+                        <td>{{ emp.name }}</td>
+                        <td>{{ emp.role }}</td>
+                        <td>{{ emp.username }}</td>
+                        <td>{{ emp.created_at.strftime('%Y-%m-%d') }}</td>
+                        <td>
+                            {% if current_user.has_permission('edit_employee') %}
+                            <a href="{{ url_for('edit_employee', id=emp.id) }}">تعديل</a>
+                            </a>
+                            {% endif %}
+
+                               {% if current_user.has_permission('delete_employee') and emp.id != current_user.id %}
+                            <form action="{{ url_for('delete_employee', employee_id=emp.id) }}" method="POST" style="display:inline;">
+                                <button type="submit" class="btn btn-sm btn-danger"
+                                        onclick="return confirm('هل أنت متأكد من حذف هذا الموظف؟')">
+                                    <i class="fas fa-trash"></i> حذف
+                                </button>
+                            </form>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Modal لإضافة موظف جديد -->
+<div class="modal fade" id="employeeModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">إضافة موظف جديد</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="POST" action="{{ url_for('add_employee') }}">
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">الاسم</label>
+                                <input type="text" class="form-control" name="name" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">الوظيفة</label>
+                                <input type="text" class="form-control" name="role" required>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">اسم المستخدم</label>
+                                <input type="text" class="form-control" name="username" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">كلمة المرور</label>
+                                <input type="password" class="form-control" name="password" required>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">الصلاحيات</label>
+                        <div class="row">
+                            {% for perm_id, perm_name in available_permissions %}
+                            <div class="col-md-6">
+                                <div class="form-check">
+                                    <input type="checkbox" class="form-check-input" name="permissions[]" value="{{ perm_id }}" id="perm_{{ perm_id }}">
+                                    <label class="form-check-label" for="perm_{{ perm_id }}">{{ perm_name }}</label>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+                    <button type="submit" class="btn btn-primary">حفظ</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

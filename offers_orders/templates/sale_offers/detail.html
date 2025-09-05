@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+
+{% block title %}تفاصيل العرض - {{ district_name }}{% endblock %}
+
+{% block content %}
+<div class="card">
+  <div class="card-header">
+    <h3>تفاصيل العرض</h3>
+  </div>
+  <div class="card-body">
+    <p><strong>نوع الوحدة:</strong> {{ offer.unit_type }}</p>
+    <p><strong>المساحة:</strong> {{ offer.area or '-' }}</p>
+    <p><strong>الطابق:</strong> {{ offer.floor }}</p>
+    <p><strong>السعر:</strong> {{ offer.price or '-' }}</p>
+    <p><strong>السوم:</strong> {{ offer.sale_limit or '-' }}</p>
+    {% if offer.location %}
+        <a href="{{ offer.location }}" target="_blank">{{ offer.location }}</a>
+     {% else %}
+       -
+     {% endif %}
+    </p>
+    <p><strong>التفاصيل:</strong> {{ offer.detalis or '-' }}</p>
+    <p><strong>المسوق:</strong> {{ offer.marketer or '-' }}</p>
+    <p><strong>الحالة:</strong> {{ offer.status }}</p>
+    <p><strong>تاريخ الإنشاء:</strong> {{ offer.created_at.strftime('%Y-%m-%d') }}</p>
+    
+    {% if offer.images %}
+      <div class="mt-3">
+        <h5>الصور:</h5>
+        {% for img in offer.images %}
+          <img src="{{ url_for('uploaded_file', filename=img) }}" class="img-thumbnail m-1" style="width:150px;height:150px;">
+        {% endfor %}
+      </div>
+    {% endif %}
+  </div>
+  <div class="card-footer">
+    <a href="{{ url_for('sales' + district.replace('وسط','m').replace('جنوب','w') + '_offers') }}" class="btn btn-secondary">رجوع</a>
+
+  </div>
+</div>
+{% endblock %}
