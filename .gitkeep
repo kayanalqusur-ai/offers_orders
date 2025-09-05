@@ -1,3 +1,0 @@
-git add .
-git commit -m "إضافة مجلدات uploads و غيرها"
-git push origin main

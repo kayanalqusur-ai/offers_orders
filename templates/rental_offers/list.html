@@ -1,0 +1,103 @@
+{% extends "base.html" %}
+
+{% block title %}عروض الإيجار - {{ district_name }}{% endblock %}
+
+{% block content %}
+<div class="row mb-3">
+    <div class="col-12 d-flex justify-content-between align-items-center">
+        <h2><i class="fas fa-key"></i> عروض الإيجار - {{ district_name }}</h2>
+        {% if current_user.has_permission('rental' + district.replace('وسط','m').replace('جنوب','w') + '_offers_add') %}
+        <a href="{{ url_for('add_rental' + district.replace('وسط','m').replace('جنوب','w') + '_offer') }}" class="btn btn-primary">
+            <i class="fas fa-plus"></i> إضافة عرض
+        </a>
+        {% endif %}
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-12">
+        <div class="table-responsive">
+            <table class="table table-striped align-middle">
+                <thead class="table-dark">
+                    <tr>
+                        <th>الصورة</th>
+                        <th>نوع الوحدة</th>
+                        <th>الطابق</th>
+                        <th>المساحة</th>
+                        <th>السعر</th>
+                        <th>التفاصيل</th>
+                        <th>المسوق</th>
+                        <th>الحالة</th>
+                        <th>تاريخ الإنشاء</th>
+                        <th>الإجراءات</th>
+                    </tr>
+                </thead>
+                <tbody>
+    {% if offers %}
+        {% for offer in offers %}
+        <tr class="offer-row" data-url="{{ url_for('rental_offer_detail', district=district, offer_id=offer.id) }}">
+            <td>
+                {% if offer.images %}
+                    <img src="{{ url_for('uploaded_file', filename=offer.images[0]) }}" class="img-thumbnail" style="width:60px;height:60px;">
+                {% else %}
+                    <span class="text-muted">لا توجد صورة</span>
+                {% endif %}
+            </td>
+            <td>{{ offer.unit_type }}</td>
+            <td>{{ offer.floor }}</td>
+            <td>{{ offer.area or '-' }}</td>
+            <td>{{ offer.price or '-' }}</td>
+            <td>{{ offer.detalis or '-' }}</td>
+            <td>{{ offer.marketer or '-' }}</td>
+            <td>
+                {% if offer.status == 'متاح' %}
+                    <span class="badge bg-success">{{ offer.status }}</span>
+                {% elif offer.status == 'عربون' %}
+                    <span class="badge bg-warning text-dark">{{ offer.status }}</span>
+                {% else %}
+                    <span class="badge bg-secondary">{{ offer.status }}</span>
+                {% endif %}
+            </td>
+            <td>{{ offer.created_at.strftime('%Y-%m-%d') }}</td>
+            <td>
+                <div class="d-flex gap-1">
+                    {% if current_user.has_permission('rental' + district.replace('وسط','m').replace('جنوب','w') + '_offers_edit') %}
+                    <a href="{{ url_for('edit_rental' + district.replace('وسط','m').replace('جنوب','w') + '_offer', offer_id=offer.id) }}" 
+                       class="btn btn-sm btn-warning" onclick="event.stopPropagation();">
+                        <i class="fas fa-edit"></i>
+                    </a>
+                    {% endif %}
+                    {% if current_user.has_permission('rental' + district.replace('وسط','m').replace('جنوب','w') + '_offers_delete') %}
+                    <a href="{{ url_for('delete_rental' + district.replace('وسط','m').replace('جنوب','w') + '_offer', offer_id=offer.id) }}" 
+                       class="btn btn-sm btn-danger" onclick="event.stopPropagation(); return confirm('هل أنت متأكد من حذف هذا العرض؟')">
+                        <i class="fas fa-trash"></i>
+                    </a>
+                    {% endif %}
+                </div>
+            </td>
+        </tr>
+        {% endfor %}
+    {% else %}
+        <tr>
+            <td colspan="10" class="text-center text-muted">لا توجد عروض حالياً</td>
+        </tr>
+    {% endif %}
+</tbody>
+
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    document.querySelectorAll(".offer-row").forEach(function(row) {
+        row.addEventListener("click", function() {
+            window.location.href = row.dataset.url;
+        });
+    });
+});
+</script>
+
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

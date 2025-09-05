@@ -1,4 +1,8 @@
- <title>تسجيل الدخول</title>
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <title>تسجيل الدخول</title>
 
   <link href="https://fonts.googleapis.com/css2?family=Cairo&display=swap" rel="stylesheet">
   <style>
@@ -129,3 +133,6 @@
         </div>
       {% endif %}
     {% endwith %}
+  </div>
+</body>
+</html>

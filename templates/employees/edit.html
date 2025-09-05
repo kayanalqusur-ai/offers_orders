@@ -1,161 +1,55 @@
-<!DOCTYPE html>
-<html lang="ar" dir="rtl">
-<head>
-    <meta charset="UTF-8">
-    <title>تعديل موظف</title>
-    <link href="https://fonts.googleapis.com/css2?family=Cairo&display=swap" rel="stylesheet">
-    <style>
-    body{font-family:'Cairo',sans-serif;background:#ecf0f1;margin:0}
-    nav{background:#ecf0f1;padding:10px 40px}
-    nav ul{display:flex;gap:20px;list-style:none;margin:0;padding:0}
-    nav a{color:#2c3e50;text-decoration:none;font-weight:bold;padding:8px 15px;border-radius:8px;transition:.3s}
-    nav a:hover{background:#3498db;color:#fff}
-    .navbar{background:#34495e;color:#fff;padding:15px;text-align:center;font-size:24px}
+{% extends "base.html" %}
 
-        main {
-            max-width: 700px;
-            margin: 30px auto;
-            background-color: #fff;
-            padding: 30px;
-            border-radius: 16px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-        }
+{% block title %}
+    {% if employee %}تعديل الموظف{% else %}إضافة موظف{% endif %}
+{% endblock %}
 
-        h2 {
-            text-align: center;
-            color: #34495e;
-            margin-bottom: 25px;
-        }
-
-        form {
-            display: flex;
-            flex-direction: column;
-            gap: 18px;
-        }
-
-        label {
-            font-weight: bold;
-        }
-
-        input[type="text"], input[type="password"] {
-            padding: 12px;
-            border-radius: 8px;
-            border: 1px solid #ccc;
-            font-size: 14px;
-            width: 100%;
-        }
-
-        .permissions {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 12px;
-            background-color: #f9f9f9;
-            padding: 15px;
-            border-radius: 8px;
-            border: 1px solid #ddd;
-        }
-
-        .permissions label {
-            font-weight: normal;
-            display: flex;
-            align-items: center;
-            min-width: 180px;
-        }
-
-        .permissions input[type="checkbox"] {
-            margin-left: 8px;
-        }
-
-        button[type="submit"] {
-            padding: 12px;
-            font-size: 16px;
-            background-color: #3498db;
-            color: white;
-            border: none;
-            border-radius: 10px;
-            cursor: pointer;
-            transition: 0.3s;
-        }
-
-        button[type="submit"]:hover {
-            background-color: #2980b9;
-        }
-    </style>
-</head>
-<body>
-
-    <div class="navbar">👥 تعديل بيانات الموظف</div>
-
-<nav>
-    <ul>
-        <li><a href="{{ url_for('dashboard') }}">الرئيسية</a></li>
-        <li><a href="{{ url_for('list_employees') }}">الموظفين</a></li>
-        <li><a href="{{ url_for('rentalm_offers') }}">عروض وسط الرياض للإيجار</a></li>
-        <li><a href="{{ url_for('rentalw_offers') }}">عروض جنوب الرياض للإيجار</a></li>
-        <li><a href="{{ url_for('salesm_offers') }}">عروض وسط الرياض للبيع</a></li>
-        <li><a href="{{ url_for('salesw_offers') }}">عروض جنوب الرياض للبيع</a></li>
-        <li><a href="{{ url_for('orders') }}">الطلبات</a></li>
-        <li><a href="{{ url_for('view_logs') }}">عرض السجلات</a></li>
-        <li><a href="{{ url_for('logout') }}">تسجيل الخروج</a></li>
-    </ul>
-</nav>
-
-<main>
-    <h2>تعديل بيانات الموظف</h2>
+{% block content %}
+<div class="container mt-4">
+    <h2>
+        {% if employee %} تعديل الموظف: {{ employee.name }} {% else %} إضافة موظف جديد {% endif %}
+    </h2>
+    <hr>
     <form method="POST">
-        <label>اسم الموظف:</label>
-        <input type="text" name="name" value="{{ employee.name }}" required>
+        <div class="mb-3">
+            <label for="name" class="form-label">الاسم</label>
+            <input type="text" class="form-control" name="name" id="name"
+                   value="{{ employee.name if employee else '' }}" required>
+        </div>
+        <div class="mb-3">
+            <label for="role" class="form-label">الوظيفة</label>
+            <input type="text" class="form-control" name="role" id="role"
+                   value="{{ employee.role if employee else '' }}" required>
+        </div>
+        <div class="mb-3">
+            <label for="username" class="form-label">اسم المستخدم</label>
+            <input type="text" class="form-control" name="username" id="username"
+                   value="{{ employee.username if employee else '' }}" required>
+        </div>
+        <div class="mb-3">
+            <label for="password" class="form-label">كلمة المرور</label>
+            <input type="password" class="form-control" name="password" id="password"
+                   {% if not employee %} required {% endif %}>
+            {% if employee %}
+                <small class="text-muted">اتركها فارغة إذا لم ترغب بتغيير كلمة المرور</small>
+            {% endif %}
+        </div>
 
-        <label>الدور/الوظيفة:</label>
-        <input type="text" name="role" value="{{ employee.role }}" required>
-
-        <label>اسم المستخدم:</label>
-        <input type="text" name="username" value="{{ employee.username }}" required>
-
-        <label>كلمة المرور (اتركها فارغة إذا لم ترغب بتغييرها):</label>
-        <input type="password" name="password" autocomplete="off">
-
-        <label>صلاحيات الوصول:</label>
-        <div class="permissions">
-            {% set perms = employee.get_permissions() %}
-            {% set all_perms = [
-                ('view_logs', 'عرض السجلات'),
-                ('employees_list', 'عرض الموظفين'),
-                ('employees_add', 'إضافة موظف'),
-                ('employees_edit', 'تعديل موظف'),
-                ('employees_delete', 'حذف موظف'),
-                ('rentalm_offers_view', 'عرض عروض الإيجار وسط'),
-                ('rentalm_offers_add', 'إضافة عرض إيجار وسط'),
-                ('rentalm_offers_edit', 'تعديل عرض إيجار وسط'),
-                ('rentalm_offers_delete', 'حذف عرض إيجار وسط'),
-                ('rentalw_offers_view', 'عرض عروض الإيجار جنوب'),
-                ('rentalw_offers_add', 'إضافة عرض إيجار جنوب'),
-                ('rentalw_offers_edit', 'تعديل عرض إيجار جنوب'),
-                ('rentalw_offers_delete', 'حذف عرض إيجار جنوب'),
-                ('salesm_offers_view', 'عرض عروض البيع وسط'),
-                ('salesm_offers_add', 'إضافة عرض بيع وسط'),
-                ('salesm_offers_edit', 'تعديل عرض بيع وسط'),
-                ('salesm_offers_delete', 'حذف عرض بيع وسط'),
-                ('salesw_offers_view', 'عرض عروض البيع جنوب'),
-                ('salesw_offers_add', 'إضافة عرض بيع جنوب'),
-                ('salesw_offers_edit', 'تعديل عرض بيع جنوب'),
-                ('salesw_offers_delete', 'حذف عرض بيع جنوب'),
-                ('orders_view', 'عرض الطلبات'),
-                ('orders_add', 'إضافة طلب'),
-                ('orders_edit', 'تعديل طلب'),
-                ('orders_delete', 'حذف طلب')
-            ] %}
-            {% for val, label in all_perms %}
-                <label>
-                    <input type="checkbox" name="permissions" value="{{ val }}" {% if val in perms %}checked{% endif %}>
-                    {{ label }}
-                </label>
+        <div class="mb-3">
+            <label class="form-label">الصلاحيات</label><br>
+            {% for perm in available_permissions %}
+                <div class="form-check form-check-inline">
+                    <input class="form-check-input" type="checkbox" name="permissions[]" value="{{ perm[0] }}"
+                        {% if employee and perm[0] in employee.get_permissions() %} checked {% endif %}>
+                    <label class="form-check-label">{{ perm[1] }}</label>
+                </div>
             {% endfor %}
         </div>
 
-        <button type="submit">تحديث</button>
+        <button type="submit" class="btn btn-primary">
+            {% if employee %} حفظ التعديلات {% else %} إضافة موظف {% endif %}
+        </button>
+        <a href="{{ url_for('list_employees') }}" class="btn btn-secondary">إلغاء</a>
     </form>
-</main>
-
-</body>
-</html>
+</div>
+{% endblock %}
