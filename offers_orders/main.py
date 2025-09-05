@@ -1,0 +1,905 @@
+import os
+from datetime import datetime
+from functools import wraps
+from extensions import db, migrate
+
+from flask import (
+    Flask, render_template, request, redirect,
+    url_for, flash, send_from_directory, abort
+)
+from flask_login import (
+    LoginManager, login_user, login_required,
+    logout_user, UserMixin, current_user
+)
+from werkzeug.security import generate_password_hash, check_password_hash
+from werkzeug.utils import secure_filename
+
+try:
+    from dotenv import load_dotenv
+    load_dotenv()
+except Exception:
+    # python-dotenv is not installed or failed to load; continue without loading .env
+    pass
+
+print(os.environ.get("DATABASE_URL"))
+# ================== تهيئة التطبيق ==================
+app = Flask(__name__)
+app.secret_key = os.environ.get("SESSION_SECRET", "your_secret_key_here")
+app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get(
+    "DATABASE_URL", "sqlite:///database.db"
+)
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+
+# مجلد رفع الملفات
+app.config['UPLOAD_FOLDER'] = os.path.join(os.path.dirname(__file__), 'uploads')
+os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
+
+from extensions import db, migrate
+
+# ربط db بالـ app
+db.init_app(app)
+
+# تهيئة الميجرات
+migrate.init_app(app, db)
+
+# استيراد النماذج بعد تهيئة db
+from models import Employee, Log, Property, RentalOffer, SaleOffer, RentalMOffer, RentalWOffer, Orders
+
+# ================== تهيئة تسجيل الدخول ==================
+login_manager = LoginManager(app)
+login_manager.login_view = 'login'
+
+@login_manager.user_loader
+def load_user(user_id):
+    """تحميل المستخدم من قاعدة البيانات عبر Flask-Login"""
+    return Employee.query.get(int(user_id))
+
+# ================== صلاحيات وملفات ==================
+ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
+
+def allowed_file(filename):
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
+def save_file(file):
+    if not file or not file.filename:
+        return None
+    filename = datetime.now().strftime("%Y-%m-%d_%H%M%S") + "_" + secure_filename(file.filename)
+    file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+    return filename
+
+def remove_files(files_list):
+    if not files_list:
+        return
+    for f in files_list:
+        try:
+            os.remove(os.path.join(app.config['UPLOAD_FOLDER'], f))
+        except FileNotFoundError:
+            pass
+        except Exception as e:
+            print(f"خطأ عند حذف الملف {f}: {e}")
+
+def permission_required(permission):
+    def decorator(f):
+        @wraps(f)
+        def decorated_function(*args, **kwargs):
+            if not current_user.is_authenticated or not current_user.has_permission(permission):
+                flash("🚫 ليس لديك صلاحية", "danger")
+                return redirect(url_for("dashboard"))
+            return f(*args, **kwargs)
+        return decorated_function
+    return decorator
+
+
+# ================== المستخدم ==================
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    if request.method == 'POST':
+        username = request.form['username'].strip()
+        password = request.form['password'].strip()
+        user = Employee.query.filter_by(username=username).first()
+        if user and check_password_hash(user.password, password):
+            login_user(user)
+            flash(f"مرحباً {user.username}", "success")
+            next_page = request.args.get('next')
+            return redirect(next_page or url_for('dashboard'))
+        else:
+            flash("اسم المستخدم أو كلمة المرور خاطئة", "danger")
+    return render_template('login.html')
+
+
+@app.route('/logout')
+@login_required
+def logout():
+    logout_user()
+    flash("تم تسجيل الخروج بنجاح ✅", "success")
+    return redirect(url_for('login'))
+
+
+# ================== لوحة التحكم ==================
+@app.route('/')
+@login_required
+def dashboard():
+    try:
+        employees_count = Employee.query.count()
+        rentalm_offers_count = RentalOffer.query.filter_by(district='وسط').count()
+        rentalw_offers_count = RentalOffer.query.filter_by(district='جنوب').count()
+        salesm_offers_count = SaleOffer.query.filter_by(district='وسط').count()
+        salesw_offers_count = SaleOffer.query.filter_by(district='جنوب').count()
+        orders_count = Orders.query.count()
+    except Exception as e:
+        return f"حدث خطأ في dashboard: {e}", 500
+
+    return render_template(
+        'dashboard.html',
+        employees_count=employees_count,
+        rentalm_offers_count=rentalm_offers_count,
+        rentalw_offers_count=rentalw_offers_count,
+        salesm_offers_count=salesm_offers_count,
+        salesw_offers_count=salesw_offers_count,
+        orders_count=orders_count
+    )
+
+
+# ================== الصلاحيات ==================
+AVAILABLE_PERMISSIONS = [
+    ('logs_view', 'عرض السجلات'),
+    ('list_employees', 'عرض الموظفين'),
+    ('add_employee', 'إضافة موظف'),
+    ('edit_employee', 'تعديل الموظف'),
+    ('delete_employee', 'حذف الموظف'),
+    ('rentalm_offers_view', 'عرض عروض الإيجار وسط'),
+    ('rentalm_offers_add', 'إضافة عرض إيجار وسط'),
+    ('rentalm_offers_edit', 'تعديل عرض إيجار وسط'),
+    ('rentalm_offers_delete', 'حذف عرض إيجار وسط'),
+    ('rentalw_offers_view', 'عرض عروض الإيجار جنوب'),
+    ('rentalw_offers_add', 'إضافة عرض إيجار جنوب'),
+    ('rentalw_offers_edit', 'تعديل عرض إيجار جنوب'),
+    ('rentalw_offers_delete', 'حذف عرض إيجار جنوب'),
+    ('salesm_offers_view', 'عرض عروض البيع وسط'),
+    ('salesm_offers_add', 'إضافة عرض بيع وسط'),
+    ('salesm_offers_edit', 'تعديل عرض بيع وسط'),
+    ('salesm_offers_delete', 'حذف عرض بيع وسط'),
+    ('salesw_offers_view', 'عرض عروض البيع جنوب'),
+    ('salesw_offers_add', 'إضافة عرض بيع جنوب'),
+    ('salesw_offers_edit', 'تعديل عرض بيع جنوب'),
+    ('salesw_offers_delete', 'حذف عرض بيع جنوب'),
+    ('orders_view', 'عرض الطلبات'),
+    ('orders_add', 'إضافة طلب'),
+    ('orders_edit', 'تعديل الطلب'),
+    ('orders_delete', 'حذف الطلب')
+]
+
+
+# ================== دوال مساعدة ==================
+def add_log(action):
+    """إضافة سجل نشاطات المستخدم"""
+    log = Log(user=current_user.username, action=action)
+    db.session.add(log)
+    db.session.commit()
+
+
+# ================== إدارة الموظفين ==================
+@app.route('/employees')
+@login_required
+@permission_required('list_employees')
+def list_employees():
+    employees = Employee.query.all()
+    return render_template(
+        'employees/list.html',
+        employees=employees,
+        available_permissions=AVAILABLE_PERMISSIONS,
+        employee=None
+    )
+
+
+# ------------------ إضافة موظف جديد ------------------
+@app.route('/employees/add', methods=['GET', 'POST'])
+@login_required
+@permission_required('add_employee')
+def add_employee():
+    if request.method == 'POST':
+        name = request.form['name'].strip()
+        role = request.form['role'].strip()
+        username = request.form['username'].strip()
+        password = request.form.get('password', '').strip()
+        permissions_list = request.form.getlist('permissions[]')
+
+        if not password:
+            flash("كلمة المرور مطلوبة لإضافة موظف جديد", "danger")
+            return redirect(url_for('add_employee'))
+
+        if Employee.query.filter_by(username=username).first():
+            flash("اسم المستخدم موجود بالفعل، اختر اسم آخر", "danger")
+            return redirect(url_for('add_employee'))
+
+        new_employee = Employee(
+            name=name,
+            role=role,
+            username=username,
+            password=generate_password_hash(password)
+        )
+        new_employee.set_permissions(permissions_list)
+        db.session.add(new_employee)
+        db.session.commit()
+
+        flash("تمت إضافة الموظف بنجاح ✅", "success")
+        add_log(f"إضافة موظف جديد: {name}")
+        return redirect(url_for('list_employees'))
+
+    return render_template(
+        'employees/list.html',
+        available_permissions=AVAILABLE_PERMISSIONS
+    )
+
+
+# ------------------ تعديل موظف ------------------
+@app.route('/employees/edit/<int:id>', methods=['GET', 'POST'])
+@login_required
+@permission_required('edit_employee')
+def edit_employee(id):
+    employee = Employee.query.get_or_404(id)
+    
+    if request.method == 'POST':
+        employee.name = request.form['name'].strip()
+        employee.role = request.form['role'].strip()
+        employee.username = request.form['username'].strip()
+
+        # تحديث كلمة المرور إذا تم إدخالها
+        password = request.form.get('password', '').strip()
+        if password:
+            employee.password = generate_password_hash(password)
+
+        # تحديث الصلاحيات
+        selected_perms = request.form.getlist('permissions[]')
+        employee.set_permissions(selected_perms)
+        
+        db.session.commit()
+
+        # إذا الموظف المعدل هو نفسه المستخدم الحالي، حدث الجلسة
+        if current_user.id == employee.id:
+            login_user(employee, fresh=True)
+
+        flash('تم تعديل الموظف بنجاح ✅', 'success')
+        add_log(f"تعديل الموظف: {employee.name}")
+        return redirect(url_for('list_employees'))
+    
+    return render_template(
+        'employees/edit.html', 
+        employee=employee, 
+        available_permissions=AVAILABLE_PERMISSIONS
+    )
+
+
+# ------------------ حذف موظف ------------------
+@app.route('/employees/delete/<int:employee_id>', methods=['POST'])
+@login_required
+@permission_required('delete_employee')
+def delete_employee(employee_id):
+    employee = Employee.query.get_or_404(employee_id)
+    
+    if employee.id == current_user.id:
+        flash("لا يمكنك حذف حسابك الخاص", "danger")
+        return redirect(url_for('list_employees'))
+
+    name = employee.name
+    db.session.delete(employee)
+    db.session.commit()
+
+    add_log(f"حذف الموظف: {name}")
+    flash("تم حذف الموظف بنجاح ✅", "success")
+    return redirect(url_for('list_employees'))
+
+
+# ================== عروض الإيجار - وسط ==================
+@app.route('/rentalm_offers')
+@login_required
+@permission_required('rentalm_offers_view')
+def rentalm_offers():
+    offers = RentalOffer.query.filter_by(district='وسط').order_by(RentalOffer.created_at.desc()).all()
+    return render_template('rental_offers/list.html', offers=offers, district='وسط', district_name='وسط')
+
+
+@app.route('/rentalm_offers/add', methods=['GET', 'POST'])
+@login_required
+@permission_required('rentalm_offers_add')
+def add_rentalm_offer():
+    if request.method == 'POST':
+        images = []
+        for i in range(1, 6):
+            file = request.files.get(f'image{i}')
+            if file and allowed_file(file.filename):
+                filename = save_file(file)
+                if filename:
+                    images.append(filename)
+
+        offer = RentalOffer(
+            unit_type=request.form['unit_type'].strip(),
+            floor=request.form['floor'].strip(),
+            area=float(request.form['area']) if request.form.get('area') else None,
+            price=float(request.form['price']) if request.form.get('price') else None,
+            detalis=request.form.get('detalis', '').strip(),
+            owner_type=request.form.get('owner_type', '').strip(),
+            location=request.form.get('location', '').strip(),
+            marketer=request.form.get('marketer', '').strip(),
+            notes=request.form.get('notes', '').strip(),
+            status=request.form['status'].strip(),
+            district='وسط',
+            images=images
+        )
+        db.session.add(offer)
+        db.session.commit()
+
+        add_log(f"إضافة عرض إيجار وسط: {offer.unit_type}")
+        flash("تمت إضافة العرض بنجاح ✅", "success")
+        return redirect(url_for('rentalm_offers'))
+
+    return render_template('rental_offers/add.html', district='وسط', district_name='وسط')
+
+
+@app.route('/rentalm_offers/edit/<int:offer_id>', methods=['GET', 'POST'])
+@login_required
+@permission_required('rentalm_offers_edit')
+def edit_rentalm_offer(offer_id):
+    offer = RentalOffer.query.get_or_404(offer_id)
+
+    if request.method == 'POST':
+        # حفظ الصور الجديدة
+        new_images = []
+        for i in range(1, 6):
+            file = request.files.get(f'image{i}')
+            if file and allowed_file(file.filename):
+                filename = save_file(file)
+                if filename:
+                    new_images.append(filename)
+
+        # إذا تم رفع صور جديدة، احذف القديمة
+        if new_images:
+            remove_files(offer.images or [])
+            offer.images = new_images
+
+        offer.unit_type = request.form['unit_type'].strip()
+        offer.floor = request.form['floor'].strip()
+        offer.area = float(request.form['area']) if request.form.get('area') else None
+        offer.price = float(request.form['price']) if request.form.get('price') else None
+        offer.detalis = request.form.get('detalis', '').strip()
+        offer.owner_type = request.form.get('owner_type', '').strip()
+        offer.location = request.form.get('location', '').strip()
+        offer.marketer = request.form.get('marketer', '').strip()
+        offer.notes = request.form.get('notes', '').strip()
+        offer.status = request.form['status'].strip()
+        offer.updated_at = datetime.utcnow()
+
+        db.session.commit()
+
+        add_log(f"تعديل عرض إيجار وسط: {offer.unit_type}")
+        flash("تم تحديث العرض بنجاح ✅", "success")
+        return redirect(url_for('rentalm_offers'))
+
+    return render_template('rental_offers/add.html', offer=offer, district='وسط', district_name='وسط')
+
+
+@app.route('/rentalm_offers/delete/<int:offer_id>', methods=['GET', 'POST'])
+@login_required
+@permission_required('rentalm_offers_delete')
+def delete_rentalm_offer(offer_id):
+    offer = RentalOffer.query.get_or_404(offer_id)
+
+    # حذف الصور المرفقة
+    remove_files(offer.images or [])
+
+    unit_type = offer.unit_type
+    db.session.delete(offer)
+    db.session.commit()
+
+    add_log(f"حذف عرض إيجار وسط: {unit_type}")
+    flash("تم حذف العرض بنجاح ✅", "success")
+    return redirect(url_for('rentalm_offers'))
+
+
+# ================== تفاصيل الإيجار (موحّد) ==================
+@app.route('/rental_offers/<district>/<int:offer_id>')
+@login_required
+def rental_offer_detail(district, offer_id):
+    offer = RentalOffer.query.filter_by(id=offer_id, district=district).first_or_404()
+    # لتسهيل زر الرجوع في القالب
+    back_endpoint = 'rentalm_offers' if district == 'وسط' else 'rentalw_offers'
+    return render_template(
+        "rental_offers/detail.html",
+        offer=offer,
+        district=district,
+        district_name='وسط' if district == 'وسط' else 'جنوب',
+        back_endpoint=back_endpoint
+    )
+
+
+# ----- توافق مع قوالب/روابط قديمة (Aliases) -----
+@app.route('/rentalm_offers/<int:offer_id>')
+@login_required
+def rentalm_offer_detail(offer_id):
+    # إعادة توجيه للـ endpoint الموحّد
+    return redirect(url_for('rental_offer_detail', district='وسط', offer_id=offer_id))
+
+@app.route('/rentalw_offers/<int:offer_id>')
+@login_required
+def rentalw_offer_detail(offer_id):
+    # إعادة توجيه للـ endpoint الموحّد
+    return redirect(url_for('rental_offer_detail', district='جنوب', offer_id=offer_id))
+
+
+# ================== عروض الإيجار - جنوب ==================
+@app.route('/rentalw_offers')
+@login_required
+@permission_required('rentalw_offers_view')
+def rentalw_offers():
+    offers = RentalOffer.query.filter_by(district='جنوب').order_by(RentalOffer.created_at.desc()).all()
+    return render_template('rental_offers/list.html', offers=offers, district='جنوب', district_name='جنوب')
+
+
+@app.route('/rentalw_offers/add', methods=['GET', 'POST'])
+@login_required
+@permission_required('rentalw_offers_add')
+def add_rentalw_offer():
+    if request.method == 'POST':
+        images = []
+        for i in range(1, 6):
+            file = request.files.get(f'image{i}')
+            if file and allowed_file(file.filename):
+                filename = save_file(file)
+                if filename:
+                    images.append(filename)
+
+        offer = RentalOffer(
+            unit_type=request.form['unit_type'].strip(),
+            floor=request.form['floor'].strip(),
+            area=float(request.form['area']) if request.form.get('area') else None,
+            price=float(request.form['price']) if request.form.get('price') else None,
+            detalis=request.form.get('detalis', '').strip(),
+            owner_type=request.form.get('owner_type', '').strip(),
+            location=request.form.get('location', '').strip(),
+            marketer=request.form.get('marketer', '').strip(),
+            notes=request.form.get('notes', '').strip(),
+            status=request.form['status'].strip(),
+            district='جنوب',
+            images=images
+        )
+
+        db.session.add(offer)
+        db.session.commit()
+
+        add_log(f"إضافة عرض إيجار جنوب: {offer.unit_type}")
+        flash("تمت إضافة العرض بنجاح ✅", "success")
+        return redirect(url_for('rentalw_offers'))
+
+    return render_template('rental_offers/add.html', district='جنوب', district_name='جنوب')
+
+
+@app.route('/rentalw_offers/edit/<int:offer_id>', methods=['GET', 'POST'])
+@login_required
+@permission_required('rentalw_offers_edit')
+def edit_rentalw_offer(offer_id):
+    offer = RentalOffer.query.get_or_404(offer_id)
+
+    if request.method == 'POST':
+        new_images = []
+        for i in range(1, 6):
+            file = request.files.get(f'image{i}')
+            if file and allowed_file(file.filename):
+                filename = save_file(file)
+                if filename:
+                    new_images.append(filename)
+
+        if new_images:
+            remove_files(offer.images or [])
+            offer.images = new_images
+
+        offer.unit_type = request.form['unit_type'].strip()
+        offer.floor = request.form['floor'].strip()
+        offer.area = float(request.form['area']) if request.form.get('area') else None
+        offer.price = float(request.form['price']) if request.form.get('price') else None
+        offer.detalis = request.form.get('detalis', '').strip()
+        offer.owner_type = request.form.get('owner_type', '').strip()
+        offer.location = request.form.get('location', '').strip()
+        offer.marketer = request.form.get('marketer', '').strip()
+        offer.notes = request.form.get('notes', '').strip()
+        offer.status = request.form['status'].strip()
+        offer.updated_at = datetime.utcnow()
+
+        db.session.commit()
+        add_log(f"تعديل عرض إيجار جنوب: {offer.unit_type}")
+        flash("تم تحديث العرض بنجاح ✅", "success")
+        return redirect(url_for('rentalw_offers'))
+
+    return render_template('rental_offers/add.html', offer=offer, district='جنوب', district_name='جنوب')
+
+
+@app.route('/rentalw_offers/delete/<int:offer_id>', methods=['GET', 'POST'])
+@login_required
+@permission_required('rentalw_offers_delete')
+def delete_rentalw_offer(offer_id):
+    offer = RentalOffer.query.get_or_404(offer_id)
+
+    # حذف الصور المرفقة
+    remove_files(offer.images or [])
+
+    unit_type = offer.unit_type
+    db.session.delete(offer)
+    db.session.commit()
+
+    add_log(f"حذف عرض إيجار [جنوب]: {unit_type}")
+    flash("تم حذف العرض بنجاح ✅", "success")
+    return redirect(url_for('rentalw_offers'))
+
+
+# ================== عروض البيع - وسط ==================
+@app.route('/salesm_offers')
+@login_required
+@permission_required('salesm_offers_view')
+def salesm_offers():
+    offers = SaleOffer.query.filter_by(district='وسط').order_by(SaleOffer.created_at.desc()).all()
+    return render_template('sale_offers/list.html', offers=offers, district='وسط', district_name='وسط')
+
+
+@app.route('/salesm_offers/add', methods=['GET', 'POST'])
+@login_required
+@permission_required('salesm_offers_add')
+def add_salesm_offer():
+    if request.method == 'POST':
+        images = []
+        for i in range(1, 6):
+            file = request.files.get(f'image{i}')
+            if file and allowed_file(file.filename):
+                filename = save_file(file)
+                if filename:
+                    images.append(filename)
+
+        offer = SaleOffer(
+            unit_type=request.form['unit_type'],
+            district='وسط',
+            area=float(request.form['area']) if request.form['area'] else None,
+            floor=request.form['floor'],
+            front=request.form['front'],
+            street=request.form['street'],
+            price=float(request.form['price']) if request.form['price'] else None,
+            sale_limit=float(request.form['sale_limit']) if request.form['sale_limit'] else None,
+            location=request.form['location'],
+            detalis=request.form['detalis'],
+            marketer=request.form['marketer'],
+            owner_type=request.form['owner_type'],
+            status=request.form['status'],
+            images=images,
+            notes=request.form['notes'],
+            created_by=current_user.username
+        )
+
+        db.session.add(offer)
+        db.session.commit()
+
+        log = Log(user=current_user.username, action=f"إضافة عرض بيع وسط: {offer.unit_type}")
+        db.session.add(log)
+        db.session.commit()
+
+        flash("تمت إضافة العرض بنجاح ✅", "success")
+        return redirect(url_for('salesm_offers'))
+
+    return render_template('sale_offers/add.html', district='وسط', district_name='وسط')
+
+
+@app.route('/salesm_offers/edit/<int:offer_id>', methods=['GET', 'POST'])
+@login_required
+@permission_required('salesm_offers_edit')
+def edit_salesm_offer(offer_id):
+    offer = SaleOffer.query.get_or_404(offer_id)
+
+    if request.method == 'POST':
+        # حفظ الصور الجديدة
+        new_images = []
+        for i in range(1, 6):
+            file = request.files.get(f'image{i}')
+            if file and allowed_file(file.filename):
+                filename = save_file(file)
+                if filename:
+                    new_images.append(filename)
+
+        # إذا تم رفع صور جديدة، احذف القديمة
+        if new_images:
+            remove_files(offer.images or [])
+            offer.images = new_images
+
+        offer.unit_type = request.form['unit_type']
+        offer.area = float(request.form['area']) if request.form['area'] else None
+        offer.floor = request.form['floor']
+        offer.front = request.form['front']
+        offer.street = request.form['street']
+        offer.price = float(request.form['price']) if request.form['price'] else None
+        offer.sale_limit = float(request.form['sale_limit']) if request.form['sale_limit'] else None
+        offer.location = request.form['location']
+        offer.detalis = request.form['detalis']
+        offer.marketer = request.form['marketer']
+        offer.owner_type = request.form['owner_type']
+        offer.status = request.form['status']
+        offer.notes = request.form['notes']
+
+        db.session.commit()
+
+        log = Log(user=current_user.username, action=f"تعديل عرض بيع وسط: {offer.unit_type}")
+        db.session.add(log)
+        db.session.commit()
+
+        flash("تم تحديث العرض بنجاح ✅", "success")
+        return redirect(url_for('salesm_offers'))
+
+    return render_template('sale_offers/add.html', offer=offer, district='وسط', district_name='وسط')
+
+
+@app.route('/salesm_offers/delete/<int:offer_id>')
+@login_required
+@permission_required('salesm_offers_delete')
+def delete_salesm_offer(offer_id):
+    offer = SaleOffer.query.get_or_404(offer_id)
+
+    # حذف الصور المرفقة
+    remove_files(offer.images or [])
+
+    unit_type = offer.unit_type
+    db.session.delete(offer)
+    db.session.commit()
+
+    log = Log(user=current_user.username, action=f"حذف عرض بيع وسط: {unit_type}")
+    db.session.add(log)
+    db.session.commit()
+
+    flash("تم حذف العرض بنجاح ✅", "success")
+    return redirect(url_for('salesm_offers'))
+
+
+@app.route("/sales_offers/<district>/<int:offer_id>")
+def sales_offer_detail(district, offer_id):
+    offer = SaleOffer.query.filter_by(id=offer_id, district=district).first_or_404()
+    return render_template(
+        "sale_offers/detail.html",
+        offer=offer,
+        district=district,
+        district_name="المنطقة الوسطى" if district == "وسط" else "المنطقة الجنوبية"
+    )
+
+
+# ================== عروض البيع - جنوب ==================
+@app.route('/salesw_offers')
+@login_required
+@permission_required('salesw_offers_view')
+def salesw_offers():
+    offers = SaleOffer.query.filter_by(district='جنوب').order_by(SaleOffer.created_at.desc()).all()
+    return render_template('sale_offers/list.html', offers=offers, district='جنوب', district_name='جنوب')
+
+
+@app.route('/salesw_offers/add', methods=['GET', 'POST'])
+@login_required
+@permission_required('salesw_offers_add')
+def add_salesw_offer():
+    if request.method == 'POST':
+        images = []
+        for i in range(1, 6):
+            file = request.files.get(f'image{i}')
+            if file and allowed_file(file.filename):
+                filename = save_file(file)
+                if filename:
+                    images.append(filename)
+
+        offer = SaleOffer(
+            unit_type=request.form['unit_type'],
+            district='جنوب',
+            area=float(request.form['area']) if request.form['area'] else None,
+            floor=request.form['floor'],
+            front=request.form['front'],
+            street=request.form['street'],
+            price=float(request.form['price']) if request.form['price'] else None,
+            sale_limit=float(request.form['sale_limit']) if request.form['sale_limit'] else None,
+            location=request.form['location'],
+            detalis=request.form['detalis'],
+            marketer=request.form['marketer'],
+            owner_type=request.form['owner_type'],
+            status=request.form['status'],
+            images=images,
+            notes=request.form['notes'],
+            created_by=current_user.username
+        )
+
+        db.session.add(offer)
+        db.session.commit()
+
+        log = Log(user=current_user.username, action=f"إضافة عرض بيع جنوب: {offer.unit_type}")
+        db.session.add(log)
+        db.session.commit()
+
+        flash("تمت إضافة العرض بنجاح ✅", "success")
+        return redirect(url_for('salesw_offers'))
+
+    return render_template('sale_offers/add.html', district='جنوب', district_name='جنوب')
+
+
+@app.route('/salesw_offers/edit/<int:offer_id>', methods=['GET', 'POST'])
+@login_required
+@permission_required('salesw_offers_edit')
+def edit_salesw_offer(offer_id):
+    offer = SaleOffer.query.get_or_404(offer_id)
+
+    if request.method == 'POST':
+        # حفظ الصور الجديدة
+        new_images = []
+        for i in range(1, 6):
+            file = request.files.get(f'image{i}')
+            if file and allowed_file(file.filename):
+                filename = save_file(file)
+                if filename:
+                    new_images.append(filename)
+
+        # إذا تم رفع صور جديدة، احذف القديمة
+        if new_images:
+            remove_files(offer.images or [])
+            offer.images = new_images
+
+        offer.unit_type = request.form['unit_type']
+        offer.area = float(request.form['area']) if request.form['area'] else None
+        offer.floor = request.form['floor']
+        offer.front = request.form['front']
+        offer.street = request.form['street']
+        offer.price = float(request.form['price']) if request.form['price'] else None
+        offer.sale_limit = float(request.form['sale_limit']) if request.form['sale_limit'] else None
+        offer.location = request.form['location']
+        offer.detalis = request.form['detalis']
+        offer.marketer = request.form['marketer']
+        offer.owner_type = request.form['owner_type']
+        offer.status = request.form['status']
+        offer.notes = request.form['notes']
+
+        db.session.commit()
+
+        log = Log(user=current_user.username, action=f"تعديل عرض بيع جنوب: {offer.unit_type}")
+        db.session.add(log)
+        db.session.commit()
+
+        flash("تم تحديث العرض بنجاح ✅", "success")
+        return redirect(url_for('salesw_offers'))
+
+    return render_template('sale_offers/add.html', offer=offer, district='جنوب', district_name='جنوب')
+
+
+@app.route('/salesw_offers/delete/<int:offer_id>')
+@login_required
+@permission_required('salesw_offers_delete')
+def delete_salesw_offer(offer_id):
+    offer = SaleOffer.query.get_or_404(offer_id)
+
+    # حذف الصور المرفقة
+    remove_files(offer.images or [])
+
+    unit_type = offer.unit_type
+    db.session.delete(offer)
+    db.session.commit()
+
+    log = Log(user=current_user.username, action=f"حذف عرض بيع جنوب: {unit_type}")
+    db.session.add(log)
+    db.session.commit()
+
+    flash("تم حذف العرض بنجاح ✅", "success")
+    return redirect(url_for('salesw_offers'))
+
+# ================== الطلبات ==================
+@app.route('/orders')
+@login_required
+@permission_required('orders_view')
+def orders():
+    all_orders = Orders.query.order_by(Orders.created_at.desc()).all()
+    return render_template('orders/list.html', requests=all_orders)
+
+
+@app.route('/add_request', methods=['GET', 'POST'])
+@login_required
+def add_request():
+    if request.method == 'POST':
+        customer_name = request.form.get('customer_name', '').strip()
+        unit_type = request.form.get('unit_type', '').strip()
+        area = request.form.get('area', '').strip()
+        price = request.form.get('price', '').strip()
+        location = request.form.get('location', '').strip()
+        phone = request.form.get('phone', '').strip()
+        marketer = request.form.get('marketer', '').strip()
+        notes = request.form.get('notes', '').strip()
+
+        if not customer_name or not unit_type:
+            flash("يرجى ملء جميع الحقول المطلوبة", "danger")
+            return redirect(url_for('add_request'))
+
+        new_request = Orders(
+            customer_name=customer_name,
+            unit_type=unit_type,
+            area=area,
+            price=price,
+            location=location,
+            phone=phone,
+            marketer=marketer,
+            notes=notes
+        )
+        db.session.add(new_request)
+        db.session.commit()
+        add_log(f"إضافة طلب جديد: {customer_name}")
+        flash("تم حفظ الطلب بنجاح ✅", "success")
+        return redirect(url_for('orders'))
+
+    return render_template('orders/add.html')
+
+
+@app.route('/edit_request/<int:id>', methods=['GET', 'POST'])
+@login_required
+@permission_required('orders_edit')
+def edit_request(id):
+    req = Orders.query.get_or_404(id)
+    if request.method == 'POST':
+        req.unit_type = request.form['unit_type'].strip()
+        req.area = request.form['area'].strip()
+        req.price = request.form['price'].strip()
+        req.location = request.form['location'].strip()
+        req.phone = request.form['phone'].strip()
+        req.marketer = request.form['marketer'].strip()
+        req.notes = request.form['notes'].strip()
+        db.session.commit()
+        add_log(f"تعديل الطلب: {req.customer_name}")
+        flash("تم تعديل الطلب ✏️", "success")
+        return redirect(url_for('orders'))
+
+    return render_template('orders/edit.html', req=req)
+
+
+@app.route('/delete_request/<int:id>', methods=['POST'])
+@login_required
+@permission_required('orders_delete')
+def delete_request(id):
+    req = Orders.query.get_or_404(id)
+    db.session.delete(req)
+    db.session.commit()
+    add_log(f"حذف الطلب: {req.customer_name}")
+    flash("تم حذف الطلب 🗑", "danger")
+    return redirect(url_for('orders'))
+
+
+# ================== السجلات ==================
+@app.route('/view_logs')
+@login_required
+@permission_required('logs_view')
+def view_logs():
+    logs_list = Log.query.order_by(Log.timestamp.desc()).limit(100).all()
+    return render_template('logs.html', logs=logs_list)
+
+
+# ================== رفع الملفات ==================
+@app.route('/uploads/<filename>')
+def uploaded_file(filename):
+    return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
+
+
+# ================== تشغيل التطبيق ==================
+if __name__ == "__main__":
+    with app.app_context():
+        db.create_all()
+        print("✅ جميع الجداول تم إنشاؤها بنجاح")
+
+        # إنشاء المستخدم الأول إذا لم يوجد
+        if Employee.query.count() == 0:
+            admin = Employee(
+                name="المدير العام",
+                role="مدير",
+                username="admin",
+                password=generate_password_hash("admin123")
+            )
+            admin.set_permissions([
+                'logs_view', 'list_employees', 'add_employee', 'edit_employee', 'delete_employee',
+                'rentalm_offers_view', 'rentalm_offers_add', 'rentalm_offers_edit', 'rentalm_offers_delete',
+                'rentalw_offers_view', 'rentalw_offers_add', 'rentalw_offers_edit', 'rentalw_offers_delete',
+                'salesm_offers_view', 'salesm_offers_add', 'salesm_offers_edit', 'salesm_offers_delete',
+                'salesw_offers_view', 'salesw_offers_add', 'salesw_offers_edit', 'salesw_offers_delete',
+                'orders_view', 'orders_add', 'orders_edit', 'orders_delete'
+            ])
+            db.session.add(admin)
+            db.session.commit()
+            print("✅ تم إنشاء المستخدم الأول: admin / admin123")
+

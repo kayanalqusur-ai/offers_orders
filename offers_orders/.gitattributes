@@ -1,0 +1,35 @@
+# إجبار جميع الملفات النصية على استخدام LF
+* text=auto eol=lf
+
+# ملفات Python
+*.py text eol=lf
+
+# ملفات HTML / CSS / JS
+*.html text eol=lf
+*.css text eol=lf
+*.js text eol=lf
+
+# ملفات SQL
+*.sql text eol=lf
+
+# ملفات YAML / JSON / INI
+*.yaml text eol=lf
+*.yml text eol=lf
+*.json text eol=lf
+*.ini text eol=lf
+
+# ملفات Markdown و Documentation
+*.md text eol=lf
+*.txt text eol=lf
+
+# ملفات الصور والملفات الثنائية لا تغير نهايات الأسطر
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.pdf binary
+*.zip binary
+*.tar.gz binary
+*.mp3 binary
+*.mp4 binary
