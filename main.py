@@ -1,27 +1,27 @@
 import os
 from datetime import datetime
 from functools import wraps
-from extensions import db, migrate
 
 from flask import (
     Flask, render_template, request, redirect,
-    url_for, flash, send_from_directory, abort
+    url_for, flash, send_from_directory
 )
 from flask_login import (
     LoginManager, login_user, login_required,
-    logout_user, UserMixin, current_user
+    logout_user, current_user
 )
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
 
+from extensions import db, migrate
+
+# تحميل المتغيرات من .env (لو موجود)
 try:
     from dotenv import load_dotenv
     load_dotenv()
 except Exception:
-    # python-dotenv is not installed or failed to load; continue without loading .env
     pass
 
-print(os.environ.get("DATABASE_URL"))
 # ================== تهيئة التطبيق ==================
 app = Flask(__name__)
 app.secret_key = os.environ.get("SESSION_SECRET", "your_secret_key_here")
@@ -34,16 +34,12 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['UPLOAD_FOLDER'] = os.path.join(os.path.dirname(__file__), 'uploads')
 os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 
-from extensions import db, migrate
-
-# ربط db بالـ app
+# ربط db & migrate
 db.init_app(app)
-
-# تهيئة الميجرات
 migrate.init_app(app, db)
 
-# استيراد النماذج بعد تهيئة db
-from models import Employee, Log, Property, RentalOffer, SaleOffer, RentalMOffer, RentalWOffer, Orders
+# استيراد الموديلات بعد db
+from models import Employee, Log, Property, RentalOffer, SaleOffer, Orders
 
 # ================== تهيئة تسجيل الدخول ==================
 login_manager = LoginManager(app)
@@ -51,10 +47,10 @@ login_manager.login_view = 'login'
 
 @login_manager.user_loader
 def load_user(user_id):
-    """تحميل المستخدم من قاعدة البيانات عبر Flask-Login"""
     return Employee.query.get(int(user_id))
 
-# ================== صلاحيات وملفات ==================
+
+# ================== مساعدات الملفات ==================
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
 
 def allowed_file(filename):
@@ -78,6 +74,8 @@ def remove_files(files_list):
         except Exception as e:
             print(f"خطأ عند حذف الملف {f}: {e}")
 
+
+# ================== صلاحيات ==================
 def permission_required(permission):
     def decorator(f):
         @wraps(f)
@@ -90,7 +88,7 @@ def permission_required(permission):
     return decorator
 
 
-# ================== المستخدم ==================
+# ================== تسجيل الدخول ==================
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
@@ -100,18 +98,16 @@ def login():
         if user and check_password_hash(user.password, password):
             login_user(user)
             flash(f"مرحباً {user.username}", "success")
-            next_page = request.args.get('next')
-            return redirect(next_page or url_for('dashboard'))
+            return redirect(url_for('dashboard'))
         else:
             flash("اسم المستخدم أو كلمة المرور خاطئة", "danger")
     return render_template('login.html')
-
 
 @app.route('/logout')
 @login_required
 def logout():
     logout_user()
-    flash("تم تسجيل الخروج بنجاح ✅", "success")
+    flash("تم تسجيل الخروج ✅", "success")
     return redirect(url_for('login'))
 
 
@@ -127,7 +123,7 @@ def dashboard():
         salesw_offers_count = SaleOffer.query.filter_by(district='جنوب').count()
         orders_count = Orders.query.count()
     except Exception as e:
-        return f"حدث خطأ في dashboard: {e}", 500
+        return f"خطأ في dashboard: {e}", 500
 
     return render_template(
         'dashboard.html',
