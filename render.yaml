@@ -1,0 +1,16 @@
+services:
+  - type: web
+    name: offers-orders
+    env: python
+    plan: free  # غيرها إلى starter أو advanced لو محتاج موارد أعلى
+    buildCommand: "pip install -r requirements.txt"
+    startCommand: "flask db upgrade && gunicorn main:app"
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: offers-orders-db
+          property: connectionString
+
+databases:
+  - name: offers-orders-db
+    plan: free
