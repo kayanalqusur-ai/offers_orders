@@ -1,5 +1,4 @@
 import os
-import json
 from datetime import datetime
 from functools import wraps
 
@@ -14,10 +13,6 @@ from flask_login import (
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
 
-# ================== استيراد الإضافات والنماذج ==================
-from extensions import db
-from models import Employee, Log, Property, RentalOffer, SaleOffer, RentalMOffer, RentalWOffer, Orders
-
 # ================== تهيئة التطبيق ==================
 app = Flask(__name__)
 app.secret_key = os.environ.get("SESSION_SECRET", "your_secret_key_here")
@@ -30,28 +25,31 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['UPLOAD_FOLDER'] = os.path.join(os.path.dirname(__file__), 'uploads')
 os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 
+# ================== استيراد الإضافات ==================
+from extensions import db
+
 # ربط db بالـ app
 db.init_app(app)
 
-# تهيئة تسجيل الدخول
+# ================== استيراد النماذج بعد تهيئة db ==================
+from models import Employee, Log, Property, RentalOffer, SaleOffer, RentalMOffer, RentalWOffer, Orders
+
+# ================== تهيئة تسجيل الدخول ==================
 login_manager = LoginManager(app)
 login_manager.login_view = 'login'
 
-# ================== تحميل المستخدم ==================
 @login_manager.user_loader
 def load_user(user_id):
-    from models import Employee  # تجنب circular import
+    """تحميل المستخدم من قاعدة البيانات عبر Flask-Login"""
     return Employee.query.get(int(user_id))
 
 # ================== صلاحيات وملفات ==================
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
 
 def allowed_file(filename):
-    """التحقق من امتداد الملف المسموح به"""
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 def save_file(file):
-    """حفظ الملف في مجلد الرفع وإعادة اسم الملف المحفوظ"""
     if not file or not file.filename:
         return None
     filename = datetime.now().strftime("%Y-%m-%d_%H%M%S") + "_" + secure_filename(file.filename)
@@ -59,7 +57,6 @@ def save_file(file):
     return filename
 
 def remove_files(files_list):
-    """حذف الملفات من مجلد الرفع"""
     if not files_list:
         return
     for f in files_list:
@@ -71,7 +68,6 @@ def remove_files(files_list):
             print(f"خطأ عند حذف الملف {f}: {e}")
 
 def permission_required(permission):
-    """ديكوريتور للتحقق من صلاحيات المستخدم قبل تنفيذ الدالة"""
     def decorator(f):
         @wraps(f)
         def decorated_function(*args, **kwargs):
@@ -82,21 +78,6 @@ def permission_required(permission):
         return decorated_function
     return decorator
 
-# ================== مثال لإنشاء الجداول ==================
-# يمكنك تشغيل هذا مرة واحدة لتوليد الجداول
-if __name__ == "__main__":
-    with app.app_context():
-        db.create_all()
-        print("✅ جميع الجداول تم إنشاؤها بنجاح")
-
-
-
-
-# ================== إعدادات تسجيل الدخول ==================
-@login_manager.user_loader
-def load_user(user_id):
-    """تحميل المستخدم من قاعدة البيانات عبر Flask-Login"""
-    return Employee.query.get(int(user_id))
 
 # ================== المستخدم ==================
 @app.route('/login', methods=['GET', 'POST'])
@@ -121,7 +102,6 @@ def logout():
     logout_user()
     flash("تم تسجيل الخروج بنجاح ✅", "success")
     return redirect(url_for('login'))
-
 
 
 # ================== لوحة التحكم ==================
@@ -887,26 +867,31 @@ def uploaded_file(filename):
 
 
 # ================== تشغيل التطبيق ==================
-with app.app_context():
-    db.create_all()
+if __name__ == "__main__":
+    with app.app_context():
+        db.create_all()
+        print("✅ جميع الجداول تم إنشاؤها بنجاح")
 
-    if Employee.query.count() == 0:
-        admin = Employee(
-            name="المدير العام",
-            role="مدير",
-            username="admin",
-            password=generate_password_hash("admin123")
-        )
-        admin.set_permissions([
-        'logs_view', 'list_employees', 'add_employee', 'edit_employee', 'delete_employee',
-        'rentalm_offers_view', 'rentalm_offers_add', 'rentalm_offers_edit', 'rentalm_offers_delete',
-        'rentalw_offers_view', 'rentalw_offers_add', 'rentalw_offers_edit', 'rentalw_offers_delete',
-        'salesm_offers_view', 'salesm_offers_add', 'salesm_offers_edit', 'salesm_offers_delete',
-        'salesw_offers_view', 'salesw_offers_add', 'salesw_offers_edit', 'salesw_offers_delete',
-        'orders_view', 'orders_add', 'orders_edit', 'orders_delete'
-      ])
+        # إنشاء المستخدم الأول إذا لم يوجد
+        if Employee.query.count() == 0:
+            admin = Employee(
+                name="المدير العام",
+                role="مدير",
+                username="admin",
+                password=generate_password_hash("admin123")
+            )
+            admin.set_permissions([
+                'logs_view', 'list_employees', 'add_employee', 'edit_employee', 'delete_employee',
+                'rentalm_offers_view', 'rentalm_offers_add', 'rentalm_offers_edit', 'rentalm_offers_delete',
+                'rentalw_offers_view', 'rentalw_offers_add', 'rentalw_offers_edit', 'rentalw_offers_delete',
+                'salesm_offers_view', 'salesm_offers_add', 'salesm_offers_edit', 'salesm_offers_delete',
+                'salesw_offers_view', 'salesw_offers_add', 'salesw_offers_edit', 'salesw_offers_delete',
+                'orders_view', 'orders_add', 'orders_edit', 'orders_delete'
+            ])
+            db.session.add(admin)
+            db.session.commit()
+            print("✅ تم إنشاء المستخدم الأول: admin / admin123")
 
-        db.session.add(admin)
-        db.session.commit()
-        print("✅ تم إنشاء المستخدم الأول: admin / admin123")
-
+    # تشغيل التطبيق
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host="0.0.0.0", port=port, debug=True)
