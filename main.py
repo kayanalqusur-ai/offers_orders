@@ -14,6 +14,14 @@ from flask_login import (
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
 
+try:
+    from dotenv import load_dotenv
+    load_dotenv()
+except Exception:
+    # python-dotenv is not installed or failed to load; continue without loading .env
+    pass
+
+print(os.environ.get("DATABASE_URL"))
 # ================== تهيئة التطبيق ==================
 app = Flask(__name__)
 app.secret_key = os.environ.get("SESSION_SECRET", "your_secret_key_here")
