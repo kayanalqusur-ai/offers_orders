@@ -25,14 +25,7 @@
                         <th>الطابق</th>
                         <th>المساحة</th>
                         <th>السعر</th>
-                         <td>
-                        <td>
-                         {% if offer.location %}
-                       <a href="https://www.google.com/maps?q={{ offer.location }}" target="_blank">عرض على الخريطة</a>
-                       {% else %}
-                             -
-                        {% endif %}
-                         </td>
+                        <th>الموقع</th>
                         <th>التفاصيل</th>
                         <th>المسوق</th>
                         <th>الحالة</th>
@@ -41,70 +34,82 @@
                     </tr>
                 </thead>
                 <tbody>
-    {% if offers %}
-        {% for offer in offers %}
-        <tr class="offer-row"
-            data-url="{% if district == 'وسط' %}
-                          {{ url_for('rentalm_offer_detail', offer_id=offer.id) }}
-                      {% elif district == 'جنوب' %}
-                          {{ url_for('rentalw_offer_detail', offer_id=offer.id) }}
-                      {% endif %}">
-            <td>
-                {% if offer.images %}
-                    <img src="{{ url_for('uploaded_file', filename=offer.images[0]) }}" class="img-thumbnail" style="width:60px;height:60px;">
-                {% else %}
-                    <span class="text-muted">لا توجد صورة</span>
-                {% endif %}
-            </td>
-            <td>{{ offer.unit_type }}</td>
-            <td>{{ offer.floor }}</td>
-            <td>{{ offer.area or '-' }}</td>
-            <td>{{ offer.price or '-' }}</td>
-            <td>{{ offer.location or '-' }}</td>
-            <td>{{ offer.detalis or '-' }}</td>
-            <td>{{ offer.marketer or '-' }}</td>
-            <td>
-                {% if offer.status == 'متاح' %}
-                    <span class="badge bg-success">{{ offer.status }}</span>
-                {% elif offer.status == 'عربون' %}
-                    <span class="badge bg-warning text-dark">{{ offer.status }}</span>
-                {% else %}
-                    <span class="badge bg-secondary">{{ offer.status }}</span>
-                {% endif %}
-            </td>
-            <td>{{ offer.created_at.strftime('%Y-%m-%d') }}</td>
-            <td>
-                <div class="d-flex gap-1">
-                    {% if current_user.has_permission('rental' + district.replace('وسط','m').replace('جنوب','w') + '_offers_edit') %}
-                    <a href="{% if district == 'وسط' %}
-                                 {{ url_for('edit_rentalm_offer', offer_id=offer.id) }}
-                              {% elif district == 'جنوب' %}
-                                 {{ url_for('edit_rentalw_offer', offer_id=offer.id) }}
-                              {% endif %}"
-                       class="btn btn-sm btn-warning" onclick="event.stopPropagation();">
-                        <i class="fas fa-edit"></i>
-                    </a>
+                    {% if offers %}
+                        {% for offer in offers %}
+                        <tr class="offer-row"
+                            data-url="{% if district == 'وسط' %}
+                                          {{ url_for('rentalm_offer_detail', offer_id=offer.id) }}
+                                      {% elif district == 'جنوب' %}
+                                          {{ url_for('rentalw_offer_detail', offer_id=offer.id) }}
+                                      {% endif %}">
+                            <td>
+                                {% if offer.images %}
+                                    <img src="{{ url_for('uploaded_file', filename=offer.images[0]) }}" class="img-thumbnail" style="width:60px;height:60px;">
+                                {% else %}
+                                    <span class="text-muted">لا توجد صورة</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ offer.unit_type }}</td>
+                            <td>{{ offer.floor }}</td>
+                            <td>{{ offer.area or '-' }}</td>
+                            <td>{{ offer.price or '-' }}</td>
+                            <td>
+                                {% if offer.location %}
+                                    <a href="https://www.google.com/maps?q={{ offer.location | urlencode }}" target="_blank">
+                                        عرض على الخريطة
+                                    </a>
+                                {% else %}
+                                    -
+                                {% endif %}
+                            </td>
+                            <td>{{ offer.detalis or '-' }}</td>
+                            <td>{{ offer.marketer or '-' }}</td>
+                            <td>
+                                {% if offer.status == 'متاح' %}
+                                    <span class="badge bg-success">{{ offer.status }}</span>
+                                {% elif offer.status == 'عربون' %}
+                                    <span class="badge bg-warning text-dark">{{ offer.status }}</span>
+                                {% else %}
+                                    <span class="badge bg-secondary">{{ offer.status }}</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ offer.created_at.strftime('%Y-%m-%d') }}</td>
+                            <td>
+                                <div class="d-flex gap-1">
+                                    {% if current_user.has_permission('rental' + district.replace('وسط','m').replace('جنوب','w') + '_offers_edit') %}
+                                    <a href="{% if district == 'وسط' %}
+                                                 {{ url_for('edit_rentalm_offer', offer_id=offer.id) }}
+                                              {% elif district == 'جنوب' %}
+                                                 {{ url_for('edit_rentalw_offer', offer_id=offer.id) }}
+                                              {% endif %}"
+                                       class="btn btn-sm btn-warning" onclick="event.stopPropagation();">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                    {% endif %}
+                                    {% if current_user.has_permission('rental' + district.replace('وسط','m').replace('جنوب','w') + '_offers_delete') %}
+                                    <a href="{% if district == 'وسط' %}
+                                                 {{ url_for('delete_rentalm_offer', offer_id=offer.id) }}
+                                              {% elif district == 'جنوب' %}
+                                                 {{ url_for('delete_rentalw_offer', offer_id=offer.id) }}
+                                              {% endif %}"
+                                       class="btn btn-sm btn-danger" onclick="event.stopPropagation(); return confirm('هل أنت متأكد من حذف هذا العرض؟')">
+                                        <i class="fas fa-trash"></i>
+                                    </a>
+                                    {% endif %}
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    {% else %}
+                        <tr>
+                            <td colspan="11" class="text-center text-muted">لا توجد عروض حالياً</td>
+                        </tr>
                     {% endif %}
-                    {% if current_user.has_permission('rental' + district.replace('وسط','m').replace('جنوب','w') + '_offers_delete') %}
-                    <a href="{% if district == 'وسط' %}
-                                 {{ url_for('delete_rentalm_offer', offer_id=offer.id) }}
-                              {% elif district == 'جنوب' %}
-                                 {{ url_for('delete_rentalw_offer', offer_id=offer.id) }}
-                              {% endif %}"
-                       class="btn btn-sm btn-danger" onclick="event.stopPropagation(); return confirm('هل أنت متأكد من حذف هذا العرض؟')">
-                        <i class="fas fa-trash"></i>
-                    </a>
-                    {% endif %}
-                </div>
-            </td>
-        </tr>
-        {% endfor %}
-    {% else %}
-        <tr>
-            <td colspan="10" class="text-center text-muted">لا توجد عروض حالياً</td>
-        </tr>
-    {% endif %}
-</tbody>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
 
 <script>
 document.addEventListener("DOMContentLoaded", function() {
@@ -115,10 +120,4 @@ document.addEventListener("DOMContentLoaded", function() {
     });
 });
 </script>
-
-                </tbody>
-            </table>
-        </div>
-    </div>
-</div>
 {% endblock %}
