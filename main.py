@@ -2,6 +2,8 @@ import os
 import json
 from datetime import datetime
 from functools import wraps
+from flask import Flask
+from flask_sqlalchemy import SQLAlchemy
 
 from flask import Flask, render_template, request, redirect, url_for, flash, send_from_directory, abort
 from flask_sqlalchemy import SQLAlchemy
@@ -12,6 +14,7 @@ from flask_login import (
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
 from sqlalchemy import func
+from flask_migrate import Migrate
 
 from models import RentalOffer
 
