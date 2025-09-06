@@ -57,23 +57,23 @@
             </div>
         </div>
 
-        <!-- نوع المالك والمسوق -->
-                    <div class="mb-3">
-                        <label class="form-label">صفة مالك العقار</label>
-                        <input list="owner_types" name="owner_type" class="form-control"
-                               value="{{ offer.owner_type if offer else '' }}">
-                       <datalist id="owner_types">
-                           <option value="مالك مباشر">
-                           <option value="وسيط">
-                           <option value="وكيل">
-                        </datalist>
-                     </div>
+        <!-- نوع المالك -->
+        <div class="mb-3">
+            <label class="form-label">صفة مالك العقار</label>
+            <input list="owner_types" name="owner_type" class="form-control"
+                   value="{{ offer.owner_type if offer else '' }}">
+            <datalist id="owner_types">
+                <option value="مالك مباشر"></option>
+                <option value="وسيط"></option>
+                <option value="وكيل"></option>
+            </datalist>
+        </div>
 
-            <div class="col-md-6">
-                <label for="marketer" class="form-label">اسم المسوق</label>
-                <input type="text" name="marketer" id="marketer" class="form-control" 
-                       value="{{ offer.marketer if offer else '' }}">
-            </div>
+        <!-- المسوق -->
+        <div class="mb-3">
+            <label for="marketer" class="form-label">اسم المسوق</label>
+            <input type="text" name="marketer" id="marketer" class="form-control" 
+                   value="{{ offer.marketer if offer else '' }}">
         </div>
 
         <!-- ملاحظات وحالة العرض -->
@@ -99,7 +99,11 @@
             {% for i in range(1,6) %}
                 <input type="file" name="image{{ i }}" accept="image/*" class="form-control mb-1">
                 {% if offer and offer.images and offer.images|length >= i %}
-                    <small>الصورة الحالية: {{ offer.images[i-1] }}</small>
+                    <div class="mt-1">
+                        <small>الصورة الحالية:</small><br>
+                        <img src="{{ url_for('uploaded_file', filename=offer.images[i-1]) }}" 
+                             alt="صورة" class="img-thumbnail" width="150">
+                    </div>
                 {% endif %}
             {% endfor %}
         </div>

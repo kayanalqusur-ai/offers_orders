@@ -56,16 +56,17 @@
                         <input type="number" step="0.01" class="form-control" name="sale_limit" value="{{ offer.sale_limit if offer else '' }}">
                     </div>
 
-                    <div class="mb-3">
-                        <label class="form-label">صفة مالك العقار</label>
-                        <input list="owner_types" name="owner_type" class="form-control"
-                               value="{{ offer.owner_type if offer else '' }}">
-                       <datalist id="owner_types">
-                           <option value="مالك مباشر">
-                           <option value="وسيط">
-                           <option value="وكيل">
-                        </datalist>
-                     </div>
+        <!-- نوع المالك -->
+        <div class="mb-3">
+            <label class="form-label">صفة مالك العقار</label>
+            <input list="owner_types" name="owner_type" class="form-control"
+                   value="{{ offer.owner_type if offer else '' }}">
+            <datalist id="owner_types">
+                <option value="مالك مباشر"></option>
+                <option value="وسيط"></option>
+                <option value="وكيل"></option>
+            </datalist>
+        </div>  
 
 
                     <div class="mb-3">
