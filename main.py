@@ -543,26 +543,26 @@ def add_salesm_offer():
                 images.append(save_file(file))
 
         offer = SaleOffer(
-            unit_type=request.form['unit_type'].strip()[:50],
-            floor=request.form['floor'].strip()[:50],
-            front=request.form.get('front','').strip()[:50],
-            street=request.form.get('street','').strip()[:50],
+            unit_type=request.form.get('unit_type', '').strip()[:50],
+            floor=request.form.get('floor', '').strip()[:50],
+            front=request.form.get('front', '').strip()[:50],
+            street=request.form.get('street', '').strip()[:50],
             area=float(request.form['area']) if request.form.get('area') else None,
             price=float(request.form['price']) if request.form.get('price') else None,
             sale_limit=float(request.form['sale_limit']) if request.form.get('sale_limit') else None,
-            detalis=request.form.get('detalis','').strip()[:1000],
-            owner_type=request.form.get('owner_type','').strip()[:50],
-            location=request.form.get('location','').strip()[:200],
-            marketer=request.form.get('marketer','').strip()[:100],
-            notes=request.form.get('notes','').strip()[:200],
-            status=request.form['status'].strip(),
+            detalis=request.form.get('detalis', '').strip()[:1000],
+            owner_type=request.form.get('owner_type', '').strip()[:50],
+            location=request.form.get('location', '').strip()[:200],
+            marketer=request.form.get('marketer', '').strip()[:100],
+            status=request.form.get('status', '').strip()[:50],
+            notes=request.form.get('notes', '').strip()[:200],
             district='وسط',
             images=images,
-            created_at=datetime.utcnow(),
-            updated_at=datetime.utcnow()
+            created_by=current_user.username
         )
         db.session.add(offer)
         db.session.commit()
+        add_log(f"إضافة عرض بيع وسط: {offer.unit_type}")
         flash("تمت إضافة العرض بنجاح ✅", "success")
         return redirect(url_for('salesm_offers'))
 

@@ -58,16 +58,17 @@
         </div>
 
         <!-- نوع المالك والمسوق -->
-        <div class="row mb-3">
-            <div class="col-md-6">
-                <label for="owner_type" class="form-label">صفة مالك العقار</label>
-                <select name="owner_type" id="owner_type" class="form-select">
-                    {% set owner_types = ['مالك مباشر','وسيط','وكيل'] %}
-                    {% for ot in owner_types %}
-                    <option value="{{ ot }}" {% if offer and offer.owner_type == ot %}selected{% endif %}>{{ ot }}</option>
-                    {% endfor %}
-                </select>
-            </div>
+                    <div class="mb-3">
+                        <label class="form-label">صفة مالك العقار</label>
+                        <input list="owner_types" name="owner_type" class="form-control"
+                               value="{{ offer.owner_type if offer else '' }}">
+                       <datalist id="owner_types">
+                           <option value="مالك مباشر">
+                           <option value="وسيط">
+                           <option value="وكيل">
+                        </datalist>
+                     </div>
+
             <div class="col-md-6">
                 <label for="marketer" class="form-label">اسم المسوق</label>
                 <input type="text" name="marketer" id="marketer" class="form-control" 
