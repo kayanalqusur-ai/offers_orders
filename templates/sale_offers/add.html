@@ -58,15 +58,22 @@
 
         <!-- نوع المالك -->
         <div class="mb-3">
-            <label class="form-label">صفة مالك العقار</label>
-            <input list="owner_types" name="owner_type" class="form-control"
-                   value="{{ offer.owner_type if offer else '' }}">
-            <datalist id="owner_types">
-                <option value="مالك مباشر"></option>
-                <option value="وسيط"></option>
-                <option value="وكيل"></option>
-            </datalist>
-        </div>  
+  <label class="form-label">صفة مالك العقار</label>
+  <select id="owner_type" name="owner_type" class="form-select" onchange="toggleOtherOwnerType(this)">
+    <option value="">اختر...</option>
+    <option value="مالك مباشر" {% if offer and offer.owner_type == "مالك مباشر" %}selected{% endif %}>مالك مباشر</option>
+    <option value="وسيط" {% if offer and offer.owner_type == "وسيط" %}selected{% endif %}>وسيط</option>
+    <option value="وكيل" {% if offer and offer.owner_type == "وكيل" %}selected{% endif %}>وكيل</option>
+    <option value="other" {% if offer and offer.owner_type not in ["مالك مباشر","وسيط","وكيل"] %}selected{% endif %}>أخرى</option>
+  </select>
+
+  <input type="text" id="other_owner_type" name="owner_type_other" 
+         class="form-control mt-2" 
+         placeholder="أدخل صفة المالك" 
+         style="display:none;"
+         value="{% if offer and offer.owner_type not in ['مالك مباشر','وسيط','وكيل'] %}{{ offer.owner_type }}{% endif %}">
+</div>
+
 
 
                     <div class="mb-3">
@@ -99,21 +106,21 @@
                         <textarea class="form-control" name="notes" rows="3">{{ offer.notes if offer else '' }}</textarea>
                     </div>
 
-                    <div class="mb-3">
-                        <label class="form-label">صور العرض (حتى 5 صور)</label>
-                        <input type="file" name="images" accept="image/*" class="form-control" multiple>
-                        
-                        {% if offer and offer.images %}
-                        <div class="mt-2 d-flex flex-wrap">
-                            {% for img in offer.images %}
-                                <div class="me-2 mb-2">
-                                    <img src="{{ url_for('uploaded_file', filename=img) }}" 
-                                         class="img-thumbnail" style="width:100px;height:100px;">
-                                </div>
-                            {% endfor %}
-                        </div>
-                        {% endif %}
+        <!-- رفع الصور -->
+        <div class="mb-3">
+            <label class="form-label">صور العرض (1-5)</label>
+            {% for i in range(1,6) %}
+                <input type="file" name="image{{ i }}" accept="image/*" class="form-control mb-1">
+                {% if offer and offer.images and offer.images|length >= i %}
+                    <div class="mt-1">
+                        <small>الصورة الحالية:</small><br>
+                        <img src="{{ url_for('uploaded_file', filename=offer.images[i-1]) }}" 
+                             alt="صورة" class="img-thumbnail" width="150">
                     </div>
+                {% endif %}
+            {% endfor %}
+        </div>
+
 
                     <div class="mb-3 d-flex justify-content-between">
                         <button type="submit" class="btn btn-primary">{% if offer %}💾 حفظ التعديلات{% else %}➕ إضافة العرض{% endif %}</button>
@@ -125,3 +132,22 @@
     </div>
 </div>
 {% endblock %}
+
+<script>
+function toggleOtherOwnerType(select) {
+  const input = document.getElementById('other_owner_type');
+  if (select.value === 'other') {
+    input.style.display = 'block';
+    input.name = 'owner_type'; // عشان يترسل مع الفورم
+  } else {
+    input.style.display = 'none';
+    input.name = 'owner_type_other'; // تجاهل
+  }
+}
+
+// استدعاء عند تحميل الصفحة (لو في عرض محفوظ)
+window.addEventListener("DOMContentLoaded", function() {
+  const select = document.getElementById('owner_type');
+  toggleOtherOwnerType(select);
+});
+</script>

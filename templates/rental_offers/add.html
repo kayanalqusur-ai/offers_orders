@@ -59,15 +59,21 @@
 
         <!-- نوع المالك -->
         <div class="mb-3">
-            <label class="form-label">صفة مالك العقار</label>
-            <input list="owner_types" name="owner_type" class="form-control"
-                   value="{{ offer.owner_type if offer else '' }}">
-            <datalist id="owner_types">
-                <option value="مالك مباشر"></option>
-                <option value="وسيط"></option>
-                <option value="وكيل"></option>
-            </datalist>
-        </div>
+  <label class="form-label">صفة مالك العقار</label>
+  <select id="owner_type" name="owner_type" class="form-select" onchange="toggleOtherOwnerType(this)">
+    <option value="">اختر...</option>
+    <option value="مالك مباشر" {% if offer and offer.owner_type == "مالك مباشر" %}selected{% endif %}>مالك مباشر</option>
+    <option value="وسيط" {% if offer and offer.owner_type == "وسيط" %}selected{% endif %}>وسيط</option>
+    <option value="وكيل" {% if offer and offer.owner_type == "وكيل" %}selected{% endif %}>وكيل</option>
+    <option value="other" {% if offer and offer.owner_type not in ["مالك مباشر","وسيط","وكيل"] %}selected{% endif %}>أخرى</option>
+  </select>
+
+  <input type="text" id="other_owner_type" name="owner_type_other" 
+         class="form-control mt-2" 
+         placeholder="أدخل صفة المالك" 
+         style="display:none;"
+         value="{% if offer and offer.owner_type not in ['مالك مباشر','وسيط','وكيل'] %}{{ offer.owner_type }}{% endif %}">
+</div>
 
         <!-- المسوق -->
         <div class="mb-3">
