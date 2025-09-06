@@ -58,12 +58,15 @@
 
                     <div class="mb-3">
                         <label class="form-label">صفة مالك العقار</label>
-                        <select name="owner_type" class="form-select">
-                            <option value="مالك مباشر" {% if offer and offer.owner_type=='مالك مباشر' %}selected{% endif %}>مالك مباشر</option>
-                            <option value="وسيط" {% if offer and offer.owner_type=='وسيط' %}selected{% endif %}>وسيط</option>
-                            <option value="وكيل" {% if offer and offer.owner_type=='وكيل' %}selected{% endif %}>وكيل</option>
-                        </select>
-                    </div>
+                        <input list="owner_types" name="owner_type" class="form-control"
+                               value="{{ offer.owner_type if offer else '' }}">
+                       <datalist id="owner_types">
+                           <option value="مالك مباشر">
+                           <option value="وسيط">
+                           <option value="وكيل">
+                        </datalist>
+                     </div>
+
 
                     <div class="mb-3">
                         <label class="form-label">الموقع</label>
