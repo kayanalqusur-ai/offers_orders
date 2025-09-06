@@ -32,7 +32,7 @@ app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get(
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 # مجلد رفع الملفات
-app.config['UPLOAD_FOLDER'] = os.path.join(os.path.dirname(__file__), 'uploads')
+app.config['UPLOAD_FOLDER'] = os.path.join(os.path.dirname(__file__), 'static', 'uploads')
 os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 
 # ربط db & migrate
@@ -52,8 +52,6 @@ def load_user(user_id):
 
 
 # ================== مساعدات الملفات ==================
-UPLOAD_FOLDER = os.path.join(os.path.dirname(__file__), 'static', 'uploads')
-os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
 
@@ -558,6 +556,8 @@ def add_salesm_offer():
             notes=request.form.get('notes', '').strip()[:200],
             district='وسط',
             images=images,
+            created_at=datetime.utcnow(),
+            updated_at=datetime.utcnow(),
             created_by=current_user.username
         )
         db.session.add(offer)
@@ -661,7 +661,8 @@ def add_salesw_offer():
                 if filename:
                     images.append(filename)
 
-        offer = SaleOffer(
+
+            offer = SaleOffer(
             unit_type=request.form['unit_type'][:50],
             district='جنوب',
             area=float(request.form['area']) if request.form['area'] else None,
@@ -677,8 +678,10 @@ def add_salesw_offer():
             status=request.form['status'][:50],
             images=images,
             notes=request.form['notes'][:200],
-            created_by=current_user.username
-        )
+            created_by=current_user.username,
+            created_at=datetime.utcnow(),
+            updated_at=datetime.utcnow()
+   )
 
         db.session.add(offer)
         db.session.commit()
@@ -714,21 +717,26 @@ def edit_salesw_offer(offer_id):
             remove_files(offer.images or [])
             offer.images = new_images
 
-        offer.unit_type = request.form['unit_type'][:50]
-        offer.area = float(request.form['area']) if request.form['area'] else None
-        offer.floor = request.form['floor'][:50]
-        offer.front = request.form['front'][:50]
-        offer.street = request.form['street'][:50]
-        offer.price = float(request.form['price']) if request.form['price'] else None
-        offer.sale_limit = float(request.form['sale_limit']) if request.form['sale_limit'] else None
-        offer.location = request.form['location'][:200]
-        offer.detalis = request.form['detalis'][:1000]
-        offer.marketer = request.form['marketer'][:100]
-        offer.owner_type = request.form['owner_type'][:50]
-        offer.status = request.form['status'][:50]
-        offer.notes = request.form['notes'][:200]
+
+        offer.unit_type = (request.form.get('unit_type') or '')[:50]
+        offer.area = float(request.form['area']) if request.form.get('area') else None
+        offer.floor = (request.form.get('floor') or '')[:50]
+        offer.front = (request.form.get('front') or '')[:50]
+        offer.street = (request.form.get('street') or '')[:50]
+        offer.price = float(request.form['price']) if request.form.get('price') else None
+        offer.sale_limit = float(request.form['sale_limit']) if request.form.get('sale_limit') else None
+        offer.location = (request.form.get('location') or '')[:200]
+        offer.detalis = (request.form.get('detalis') or '')[:1000]
+        offer.marketer = (request.form.get('marketer') or '')[:100]
+        offer.owner_type = (request.form.get('owner_type') or '')[:50]
+        offer.status = (request.form.get('status') or '')[:50]
+        offer.notes = (request.form.get('notes') or '')[:200]
+
+# تحديث وقت التعديل
+        offer.updated_at = datetime.utcnow()
 
         db.session.commit()
+
 
         log = Log(user=current_user.username, action=f"تعديل عرض بيع جنوب: {offer.unit_type}")
         db.session.add(log)

@@ -50,26 +50,27 @@
 </div>
 
 <script>
-    const searchInput = document.getElementById('searchInput');
-    const actionFilter = document.getElementById('actionFilter');
-    const rows = document.querySelectorAll('#logsTable tbody tr');
+const searchInput = document.getElementById('searchInput');
+const actionFilter = document.getElementById('actionFilter');
+const rows = document.querySelectorAll('#logsTable tbody tr');
 
-    function filterLogs() {
-        const searchValue = searchInput.value.toLowerCase();
-        const actionValue = actionFilter.value;
+function filterLogs() {
+    const searchValue = searchInput.value.toLowerCase();
+    const actionValue = actionFilter.value.toLowerCase();
 
-        rows.forEach(row => {
-            const user = row.cells[0].innerText.toLowerCase();
-            const action = row.cells[1].innerText;
+    rows.forEach(row => {
+        const user = row.cells[0].innerText.toLowerCase();
+        const action = row.cells[1].innerText.toLowerCase();
 
-            const matchesSearch = user.includes(searchValue) || action.toLowerCase().includes(searchValue);
-            const matchesAction = !actionValue || action.includes(actionValue);
+        const matchesSearch = user.includes(searchValue) || action.includes(searchValue);
+        const matchesAction = !actionValue || action.includes(actionValue);
 
-            row.style.display = (matchesSearch && matchesAction) ? '' : 'none';
-        });
-    }
+        row.style.display = (matchesSearch && matchesAction) ? '' : 'none';
+    });
+}
 
-    searchInput.addEventListener('keyup', filterLogs);
-    actionFilter.addEventListener('change', filterLogs);
+searchInput.addEventListener('keyup', filterLogs);
+actionFilter.addEventListener('change', filterLogs);
 </script>
+لهف
 {% endblock %}
