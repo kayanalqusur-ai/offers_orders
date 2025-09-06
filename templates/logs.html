@@ -10,10 +10,24 @@
     </div>
 </div>
 
+<div class="row mb-3">
+    <div class="col-4">
+        <input type="text" id="searchInput" class="form-control" placeholder="ابحث باسم المستخدم أو العملية...">
+    </div>
+    <div class="col-3">
+        <select id="actionFilter" class="form-control">
+            <option value="">الكل</option>
+            <option value="إضافة">إضافة</option>
+            <option value="تعديل">تعديل</option>
+            <option value="حذف">حذف</option>
+        </select>
+    </div>
+</div>
+
 <div class="row">
     <div class="col-12">
         <div class="table-responsive">
-            <table class="table table-striped">
+            <table class="table table-striped" id="logsTable">
                 <thead>
                     <tr>
                         <th>المستخدم</th>
@@ -34,4 +48,28 @@
         </div>
     </div>
 </div>
+
+<script>
+    const searchInput = document.getElementById('searchInput');
+    const actionFilter = document.getElementById('actionFilter');
+    const rows = document.querySelectorAll('#logsTable tbody tr');
+
+    function filterLogs() {
+        const searchValue = searchInput.value.toLowerCase();
+        const actionValue = actionFilter.value;
+
+        rows.forEach(row => {
+            const user = row.cells[0].innerText.toLowerCase();
+            const action = row.cells[1].innerText;
+
+            const matchesSearch = user.includes(searchValue) || action.toLowerCase().includes(searchValue);
+            const matchesAction = !actionValue || action.includes(actionValue);
+
+            row.style.display = (matchesSearch && matchesAction) ? '' : 'none';
+        });
+    }
+
+    searchInput.addEventListener('keyup', filterLogs);
+    actionFilter.addEventListener('change', filterLogs);
+</script>
 {% endblock %}
