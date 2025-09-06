@@ -13,16 +13,5 @@ gunicorn==20.1.0
 Flask-Migrate==4.0.5
 setuptools<81
 psycopg2-binary>=2.9.7
-FLASK_APP=main.py
-FLASK_ENV=production
-DATABASE_URL=postgresql://offers_orders:qkiEgdvonowQqG5psQD4Rik2QvDdV4SA@dpg-d2t7pimuk2gs73cjkkdg-a.oregon-postgres.render.com/offers_orders
-SECRET_KEY=your-secret-key
-
-
-# AWS S3 settings
-AWS_ACCESS_KEY_ID=***REMOVED***
-AWS_SECRET_ACCESS_KEY=***REMOVED***
-AWS_BUCKET_NAME=kayan-alqusur-uploads
-AWS_REGION=eu-north-1
 
 ***REMOVED***==1.28.12
