@@ -59,13 +59,13 @@
                             data-marketer="{{ offer.marketer or '' }}"
                             data-price="{{ offer.price or 0 }}">
                             <td>
-                                {% if offer.images %}
-                                <img src="{{ url_for('static', filename='uploads/' ~ offer.images[0]) }}" 
-                                     class="img-thumbnail" style="width:60px;height:60px;" alt="صورة العقار">
-                                {% else %}
-                                <span class="text-muted">لا توجد صورة</span>
-                                {% endif %}
-                            </td>
+                           {% if offer.images %}
+                              <img src="{{ offer.images[0] }}" class="img-thumbnail" style="width:60px;height:60px;" alt="صورة العقار">
+                           {% else %}
+                            <span class="text-muted">لا توجد صورة</span>
+                             {% endif %}
+                             </td>
+
                             <td>{{ offer.unit_type }}</td>
                             <td>{{ offer.floor }}</td>
                             <td>{{ offer.area or '-' }}</td>

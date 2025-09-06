@@ -99,20 +99,20 @@
             </div>
         </div>
 
-        <!-- رفع الصور -->
-        <div class="mb-3">
-            <label class="form-label">صور العرض (1-5)</label>
-            {% for i in range(1,6) %}
-                <input type="file" name="image{{ i }}" accept="image/*" class="form-control mb-1">
-                {% if offer and offer.images and offer.images|length >= i %}
-                    <div class="mt-1">
-                        <small>الصورة الحالية:</small><br>
-                        <img src="{{ url_for('uploaded_file', filename=offer.images[i-1]) }}" 
-                             alt="صورة" class="img-thumbnail" width="150">
-                    </div>
-                {% endif %}
-            {% endfor %}
-        </div>
+     <!-- رفع الصور -->
+<div class="mb-3">
+    <label class="form-label">صور العرض (1-5)</label>
+    {% for i in range(1,6) %}
+        <input type="file" name="image{{ i }}" accept="image/*" class="form-control mb-1">
+        {% if offer and offer.images and offer.images|length >= i %}
+            <div class="mt-1">
+                <small>الصورة الحالية:</small><br>
+                <img src="{{ offer.images[i-1] }}" class="img-thumbnail" style="width:150px;height:150px;" alt="صورة العقار">
+            </div>
+        {% endif %}
+    {% endfor %}
+</div>
+
 
         <!-- الأزرار -->
         <button type="submit" class="btn btn-primary">
