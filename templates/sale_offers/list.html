@@ -39,12 +39,13 @@
         {% for offer in offers %}
         <tr class="offer-row" data-url="{{ url_for('sales_offer_detail', district=district, offer_id=offer.id) }}">
             <td>
-                {% if offer.images %}
-                    <img src="{{ url_for('uploaded_file', filename=offer.images[0]) }}" class="img-thumbnail" style="width:60px;height:60px;">
-                {% else %}
+            {% if offer.images %}
+                             <img src="{{ url_for('static', filename='uploads/' ~ offer.images[0]) }}" 
+                            class="img-thumbnail" style="width:60px;height:60px;" alt="صورة العقار">
+                             {% else %}
                     <span class="text-muted">لا توجد صورة</span>
-                {% endif %}
-            </td>
+                         {% endif %}
+                       </td>
             <td>{{ offer.unit_type }}</td>
             <td>{{ offer.floor }}</td>
             <td>{{ offer.area or '-' }}</td>

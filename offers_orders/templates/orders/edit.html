@@ -1,58 +1,0 @@
-{% extends "base.html" %}
-
-{% block title %}تعديل الطلب{% endblock %}
-
-{% block content %}
-<div class="row mb-4">
-    <div class="col-12">
-        <h2>✏️ تعديل طلب العميل: {{ req.customer_name }}</h2>
-        <hr>
-    </div>
-</div>
-
-<div class="row">
-    <div class="col-12">
-        <div class="card border-success">
-            <div class="card-header bg-success text-white">نموذج تعديل الطلب</div>
-            <div class="card-body">
-                <form method="POST" action="{{ url_for('edit_request', id=req.id) }}">
-                    <div class="mb-3">
-                        <label>اسم العميل</label>
-                        <input type="text" class="form-control" value="{{ req.customer_name }}" disabled>
-                    </div>
-                    <div class="mb-3">
-                        <label>نوع العقار <span class="text-danger">*</span></label>
-                        <input type="text" class="form-control" name="unit_type" value="{{ req.unit_type }}" required placeholder="مثل: شقة، فيلا">
-                    </div>
-                    <div class="mb-3">
-                        <label>المساحة (م²)</label>
-                        <input type="number" class="form-control" name="area" value="{{ req.area }}" placeholder="مثال: 120">
-                    </div>
-                    <div class="mb-3">
-                        <label>المبلغ</label>
-                        <input type="number" class="form-control" name="price" value="{{ req.price }}" placeholder="مثال: 50000">
-                    </div>
-                    <div class="mb-3">
-                        <label>الأحياء</label>
-                        <input type="text" class="form-control" name="location" value="{{ req.location }}" placeholder="مثل: وسط الرياض">
-                    </div>
-                    <div class="mb-3">
-                        <label>رقم الهاتف</label>
-                        <input type="text" class="form-control" name="phone" value="{{ req.phone }}" placeholder="مثال: 0551234567">
-                    </div>
-                    <div class="mb-3">
-                        <label>المسوق</label>
-                        <input type="text" class="form-control" name="marketer" value="{{ req.marketer }}" placeholder="اسم المسوق إذا وجد">
-                    </div>
-                    <div class="mb-3">
-                        <label>ملاحظات</label>
-                        <textarea class="form-control" name="notes" rows="3" placeholder="أي ملاحظات إضافية">{{ req.notes }}</textarea>
-                    </div>
-                    <button type="submit" class="btn btn-success">💾 حفظ التعديلات</button>
-                    <a href="{{ url_for('orders') }}" class="btn btn-secondary">إلغاء</a>
-                </form>
-            </div>
-        </div>
-    </div>
-</div>
-{% endblock %}

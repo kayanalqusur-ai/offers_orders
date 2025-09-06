@@ -51,24 +51,31 @@ def load_user(user_id):
 
 
 # ================== مساعدات الملفات ==================
+UPLOAD_FOLDER = os.path.join(os.path.dirname(__file__), 'static', 'uploads')
+os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
 
 def allowed_file(filename):
+    """تحقق إذا كان نوع الملف مسموح به"""
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 def save_file(file):
+    """حفظ الملف في مجلد static/uploads"""
     if not file or not file.filename:
         return None
     filename = datetime.now().strftime("%Y-%m-%d_%H%M%S") + "_" + secure_filename(file.filename)
-    file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+    file_path = os.path.join(UPLOAD_FOLDER, filename)
+    file.save(file_path)
     return filename
 
 def remove_files(files_list):
+    """حذف قائمة من الملفات من مجلد static/uploads"""
     if not files_list:
         return
     for f in files_list:
         try:
-            os.remove(os.path.join(app.config['UPLOAD_FOLDER'], f))
+            os.remove(os.path.join(UPLOAD_FOLDER, f))
         except FileNotFoundError:
             pass
         except Exception as e:
@@ -627,7 +634,8 @@ def edit_salesm_offer(offer_id):
     return render_template('sale_offers/add.html', offer=offer, district='وسط', district_name='وسط')
 
 
-@app.route('/salesm_offers/delete/<int:offer_id>')
+@app.route('/salesm_offers/delete/<int:offer_id>', methods=['POST'])
+
 @login_required
 @permission_required('salesm_offers_delete')
 def delete_salesm_offer(offer_id):
@@ -899,3 +907,6 @@ if __name__ == "__main__":
             db.session.commit()
             print("✅ تم إنشاء المستخدم الأول: admin / admin123")
 
+    # تشغيل السيرفر
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host="0.0.0.0", port=port)
