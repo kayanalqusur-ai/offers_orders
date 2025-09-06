@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}تفاصيل عرض الإيجار - {{ district }}{% endblock %}
+{% block title %}تفاصيل عرض الإيجار - {{ district_name }}{% endblock %}
 
 {% block content %}
 <div class="card">
@@ -13,41 +13,48 @@
     <p><strong>الطابق:</strong> {{ offer.floor or '-' }}</p>
     <p><strong>السعر:</strong> {{ offer.price or '-' }} ريال</p>
     <p><strong>الموقع:</strong>
-    {% if offer.location %}
+      {% if offer.location %}
         <a href="{{ offer.location }}" target="_blank">{{ offer.location }}</a>
-     {% else %}
-       -
-     {% endif %}
+      {% else %}
+        -
+      {% endif %}
     </p>
 
     <p><strong>التفاصيل:</strong> {{ offer.detalis or '-' }}</p>
     <p><strong>المسوق:</strong> {{ offer.marketer or '-' }}</p>
     <p><strong>صفة المالك:</strong> {{ offer.owner_type or '-' }}</p>
     <p><strong>الحالة:</strong> 
-        {% if offer.status == 'متاح' %}
-            <span class="badge bg-success">{{ offer.status }}</span>
-        {% elif offer.status == 'عربون' %}
-            <span class="badge bg-warning text-dark">{{ offer.status }}</span>
-        {% else %}
-            <span class="badge bg-secondary">{{ offer.status }}</span>
-        {% endif %}
+      {% if offer.status == 'متاح' %}
+        <span class="badge bg-success">{{ offer.status }}</span>
+      {% elif offer.status == 'عربون' %}
+        <span class="badge bg-warning text-dark">{{ offer.status }}</span>
+      {% else %}
+        <span class="badge bg-secondary">{{ offer.status }}</span>
+      {% endif %}
     </p>
     <p><strong>تاريخ الإنشاء:</strong> {{ offer.created_at.strftime('%Y-%m-%d') }}</p>
+
     {% if offer.notes %}
-    <p><strong>ملاحظات:</strong> {{ offer.notes }}</p>
+      <p><strong>ملاحظات:</strong> {{ offer.notes }}</p>
     {% endif %}
 
     {% if offer.images %}
       <div class="mt-3">
         <h5>الصور:</h5>
         {% for img in offer.images %}
-          <img src="{{ url_for('uploaded_file', filename=img) }}" class="img-thumbnail m-1" style="width:150px;height:150px;">
+          <img src="{{ url_for('uploaded_file', filename=img) }}" 
+               class="img-thumbnail m-1" 
+               style="width:150px;height:150px;">
         {% endfor %}
       </div>
     {% endif %}
   </div>
   <div class="card-footer">
-    <a href="{{ url_for('rental' + ('m' if district=='وسط' else 'w') + '_offers') }}" class="btn btn-secondary">⬅ العودة لقائمة العروض</a>
+    {% if district == 'وسط' %}
+      <a href="{{ url_for('rentalm_offers') }}" class="btn btn-secondary">⬅ العودة لقائمة العروض</a>
+    {% elif district == 'جنوب' %}
+      <a href="{{ url_for('rentalw_offers') }}" class="btn btn-secondary">⬅ العودة لقائمة العروض</a>
+    {% endif %}
   </div>
 </div>
 {% endblock %}

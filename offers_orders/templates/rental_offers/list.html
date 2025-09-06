@@ -44,7 +44,9 @@
                                       {% endif %}">
                             <td>
                                 {% if offer.images %}
-                                    <img src="{{ url_for('uploaded_file', filename=offer.images[0]) }}" class="img-thumbnail" style="width:60px;height:60px;">
+                                    <img src="{{ url_for('static', filename='uploads/' ~ offer.images[0]) }}" 
+                               class="img-thumbnail" style="width:60px;height:60px;">
+
                                 {% else %}
                                     <span class="text-muted">لا توجد صورة</span>
                                 {% endif %}
