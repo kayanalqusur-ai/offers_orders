@@ -1,117 +1,0 @@
-{% extends "base.html" %}
-
-{% block title %}{% if offer %}تعديل{% else %}إضافة{% endif %} عرض البيع - {{ district_name }}{% endblock %}
-
-{% block content %}
-<div class="row mb-4">
-    <div class="col-12">
-        <h2><i class="fas fa-home"></i> {% if offer %}تعديل{% else %}إضافة{% endif %} عرض البيع - {{ district_name }}</h2>
-        <hr>
-    </div>
-</div>
-
-<div class="row justify-content-center">
-    <div class="col-lg-8">
-        <div class="card border-primary">
-            <div class="card-header bg-primary text-white">
-                {% if offer %}تعديل{% else %}إضافة{% endif %} العرض
-            </div>
-            <div class="card-body">
-                <form method="POST" enctype="multipart/form-data">
-                    <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label">نوع الوحدة</label>
-                            <input type="text" class="form-control" name="unit_type" value="{{ offer.unit_type if offer else '' }}" required>
-                        </div>
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label">المساحة</label>
-                            <input type="number" step="0.01" class="form-control" name="area" value="{{ offer.area if offer else '' }}">
-                        </div>
-                    </div>
-
-                    <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label">الطابق</label>
-                            <input type="text" class="form-control" name="floor" value="{{ offer.floor if offer else '' }}">
-                        </div>
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label">الواجهة</label>
-                            <input type="text" class="form-control" name="front" value="{{ offer.front if offer else '' }}">
-                        </div>
-                    </div>
-
-                    <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label">الشارع</label>
-                            <input type="text" class="form-control" name="street" value="{{ offer.street if offer else '' }}">
-                        </div>
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label">السوم</label>
-                            <input type="number" step="0.01" class="form-control" name="price" value="{{ offer.price if offer else '' }}">
-                        </div>
-                    </div>
-
-                    <div class="mb-3">
-                        <label class="form-label">حد البيع</label>
-                        <input type="number" step="0.01" class="form-control" name="sale_limit" value="{{ offer.sale_limit if offer else '' }}">
-                    </div>
-
-                    <div class="mb-3">
-                        <label class="form-label">صفة مالك العقار</label>
-                        <select name="owner_type" class="form-select">
-                            <option value="مالك مباشر" {% if offer and offer.owner_type=='مالك مباشر' %}selected{% endif %}>مالك مباشر</option>
-                            <option value="وسيط" {% if offer and offer.owner_type=='وسيط' %}selected{% endif %}>وسيط</option>
-                            <option value="وكيل" {% if offer and offer.owner_type=='وكيل' %}selected{% endif %}>وكيل</option>
-                        </select>
-                    </div>
-
-                    <div class="mb-3">
-                        <label class="form-label">الموقع</label>
-                        <input type="text" class="form-control" name="location" value="{{ offer.location if offer else '' }}">
-                    </div>
-
-                    <div class="mb-3">
-                        <label class="form-label">التفاصيل</label>
-                        <textarea class="form-control" name="detalis" rows="4">{{ offer.detalis if offer else '' }}</textarea>
-                    </div>
-
-                    <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label">المسوق</label>
-                            <input type="text" class="form-control" name="marketer" value="{{ offer.marketer if offer else '' }}">
-                        </div>
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label">الحالة</label>
-                            <select class="form-select" name="status">
-                                <option value="متاح" {% if offer and offer.status == 'متاح' %}selected{% endif %}>متاح</option>
-                                <option value="عربون" {% if offer and offer.status == 'عربون' %}selected{% endif %}>عربون</option>
-                                <option value="مباع" {% if offer and offer.status == 'مباع' %}selected{% endif %}>مباع</option>
-                            </select>
-                        </div>
-                    </div>
-
-                    <div class="mb-3">
-                        <label class="form-label">ملاحظات</label>
-                        <textarea class="form-control" name="notes" rows="3">{{ offer.notes if offer else '' }}</textarea>
-                    </div>
-
-                    <div class="mb-3">
-                        <label class="form-label">صور العرض (1-5)</label>
-                        {% for i in range(1,6) %}
-                        <input type="file" name="image{{ i }}" accept="image/*" class="form-control mb-1">
-                        {% endfor %}
-                        {% if offer and offer.images %}
-                        <small class="text-muted">صور موجودة حالياً: {{ offer.images|join(', ') }}</small>
-                        {% endif %}
-                    </div>
-
-                    <div class="mb-3 d-flex justify-content-between">
-                        <button type="submit" class="btn btn-primary">{% if offer %}💾 حفظ التعديلات{% else %}➕ إضافة العرض{% endif %}</button>
-                        <a href="{{ url_for('sales' + district.replace('وسط','m').replace('جنوب','w') + '_offers') }}" class="btn btn-secondary">إلغاء</a>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
-</div>
-{% endblock %}
