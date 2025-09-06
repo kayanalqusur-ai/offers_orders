@@ -1,7 +1,7 @@
 import os
 from datetime import datetime
 from functools import wraps
-from flask import request, redirect, url_for, flash, render_template, send_from_directory
+import uuid
 
 from flask import (
     Flask, render_template, request, redirect,
@@ -59,10 +59,11 @@ def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 def save_file(file):
-    filename = secure_filename(file.filename)
-    path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+    name = secure_filename(file.filename)
+    unique = f"{datetime.utcnow().strftime('%Y%m%d%H%M%S')}_{uuid.uuid4().hex[:8]}_{name}"
+    path = os.path.join(app.config['UPLOAD_FOLDER'], unique)
     file.save(path)
-    return filename
+    return unique
 
 def remove_files(file_list):
     for filename in file_list:
@@ -310,7 +311,7 @@ def add_rentalm_offer():
             area=float(request.form['area']) if request.form.get('area') else None,
             price=float(request.form['price']) if request.form.get('price') else None,
             detalis=request.form.get('detalis', '').strip()[:500],
-            owner_type=request.form.get('owner_type', '').strip()[:50],
+            owner_type = request.form.get("owner_type") or request.form.get("owner_type_other"),
             location=request.form.get('location', '').strip()[:200],
             marketer=request.form.get('marketer', '').strip()[:100],
             notes=request.form.get('notes', '').strip()[:200],
@@ -354,7 +355,7 @@ def edit_rentalm_offer(offer_id):
         offer.area = float(request.form['area']) if request.form.get('area') else None
         offer.price = float(request.form['price']) if request.form.get('price') else None
         offer.detalis = request.form.get('detalis', '').strip()[:500]
-        offer.owner_type = request.form.get('owner_type', '').strip()[:50]
+        offer.owner_type = request.form.get("owner_type") or request.form.get("owner_type_other")
         offer.location = request.form.get('location', '').strip()[:200]
         offer.marketer = request.form.get('marketer', '').strip()[:100]
         offer.notes = request.form.get('notes', '').strip()[:200]
@@ -445,7 +446,7 @@ def add_rentalw_offer():
             area=float(request.form['area']) if request.form.get('area') else None,
             price=float(request.form['price']) if request.form.get('price') else None,
             detalis=request.form.get('detalis', '').strip()[:500],
-            owner_type=request.form.get('owner_type', '').strip()[:50],
+            owner_type = request.form.get("owner_type") or request.form.get("owner_type_other"),
             location=request.form.get('location', '').strip()[:200],
             marketer=request.form.get('marketer', '').strip()[:100],
             notes=request.form.get('notes', '').strip()[:200],
@@ -488,7 +489,7 @@ def edit_rentalw_offer(offer_id):
         offer.area = float(request.form['area']) if request.form.get('area') else None
         offer.price = float(request.form['price']) if request.form.get('price') else None
         offer.detalis = request.form.get('detalis', '').strip()[:1000]
-        offer.owner_type = request.form.get('owner_type', '').strip()[:50]
+        offer.owner_type = request.form.get("owner_type") or request.form.get("owner_type_other")
         offer.location = request.form.get('location', '').strip()[:200]
         offer.marketer = request.form.get('marketer', '').strip()[:100]
         offer.notes = request.form.get('notes', '').strip()[:200]
@@ -536,9 +537,12 @@ def salesm_offers():
 def add_salesm_offer():
     if request.method == 'POST':
         images = []
-        for file in request.files.getlist('images'):
+        for i in range(1, 6):
+            file = request.files.get(f'image{i}')
             if file and allowed_file(file.filename):
-                images.append(save_file(file))
+                filename = save_file(file)
+                if filename:
+                    images.append(filename)
 
         offer = SaleOffer(
             unit_type=request.form.get('unit_type', '').strip()[:50],
@@ -549,7 +553,7 @@ def add_salesm_offer():
             price=float(request.form['price']) if request.form.get('price') else None,
             sale_limit=float(request.form['sale_limit']) if request.form.get('sale_limit') else None,
             detalis=request.form.get('detalis', '').strip()[:1000],
-            owner_type=request.form.get('owner_type', '').strip()[:50],
+            owner_type = request.form.get("owner_type") or request.form.get("owner_type_other"),
             location=request.form.get('location', '').strip()[:200],
             marketer=request.form.get('marketer', '').strip()[:100],
             status=request.form.get('status', '').strip()[:50],
@@ -593,7 +597,7 @@ def edit_salesm_offer(offer_id):
         offer.price = float(request.form['price']) if request.form.get('price') else None
         offer.sale_limit = float(request.form['sale_limit']) if request.form.get('sale_limit') else None
         offer.detalis = request.form.get('detalis','').strip()[:1000]
-        offer.owner_type = request.form.get('owner_type','').strip()[:50]
+        offer.owner_type = request.form.get("owner_type") or request.form.get("owner_type_other")
         offer.location = request.form.get('location','').strip()[:200]
         offer.marketer = request.form.get('marketer','').strip()[:100]
         offer.notes = request.form.get('notes','').strip()[:200]
@@ -674,7 +678,7 @@ def add_salesw_offer():
             location=request.form['location'][:200],
             detalis=request.form['detalis'][:1000],
             marketer=request.form['marketer'][:100],
-            owner_type=request.form['owner_type'][:50],
+            owner_type=request.form.get("owner_type") or request.form.get("owner_type_other"),
             status=request.form['status'][:50],
             images=images,
             notes=request.form['notes'][:200],
@@ -728,7 +732,7 @@ def edit_salesw_offer(offer_id):
         offer.location = (request.form.get('location') or '')[:200]
         offer.detalis = (request.form.get('detalis') or '')[:1000]
         offer.marketer = (request.form.get('marketer') or '')[:100]
-        offer.owner_type = (request.form.get('owner_type') or '')[:50]
+        offer.owner_type = (request.form.get("owner_type") or request.form.get("owner_type_other"))[:50]
         offer.status = (request.form.get('status') or '')[:50]
         offer.notes = (request.form.get('notes') or '')[:200]
 

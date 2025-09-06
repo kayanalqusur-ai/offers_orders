@@ -14,6 +14,22 @@
     </div>
 </div>
 
+<!-- فلتر البحث -->
+<div class="row mb-3">
+    <div class="col-md-4 mb-2">
+        <input type="text" id="searchInput" class="form-control" placeholder="🔎 ابحث بالكلمة (نوع، تفاصيل، مسوق)">
+    </div>
+    <div class="col-md-3 mb-2">
+        <input type="number" id="minPrice" class="form-control" placeholder="السعر الأدنى">
+    </div>
+    <div class="col-md-3 mb-2">
+        <input type="number" id="maxPrice" class="form-control" placeholder="السعر الأقصى">
+    </div>
+    <div class="col-md-2 mb-2">
+        <button class="btn btn-primary w-100" onclick="filterOffers()">تصفية</button>
+    </div>
+</div>
+
 <div class="row">
     <div class="col-12">
         <div class="table-responsive">
@@ -26,7 +42,6 @@
                         <th>المساحة</th>
                         <th>السعر</th>
                         <th>الموقع</th>
-                        <th>التفاصيل</th>
                         <th>المسوق</th>
                         <th>الحالة</th>
                         <th>تاريخ الإنشاء</th>
@@ -37,19 +52,19 @@
                     {% if offers %}
                         {% for offer in offers %}
                         <tr class="offer-row"
-                            data-url="{% if district == 'وسط' %}
-                                          {{ url_for('rentalm_offer_detail', offer_id=offer.id) }}
-                                      {% elif district == 'جنوب' %}
-                                          {{ url_for('rentalw_offer_detail', offer_id=offer.id) }}
-                                      {% endif %}">
+                            data-url="{% if district == 'وسط' %}{{ url_for('rentalm_offer_detail', offer_id=offer.id) }}{% elif district == 'جنوب' %}{{ url_for('rentalw_offer_detail', offer_id=offer.id) }}{% endif %}"
+                            data-unit="{{ offer.unit_type }}"
+                            data-detalis="{{ offer.detalis or '' }}"
+                            data-marketer="{{ offer.marketer or '' }}"
+                            data-price="{{ offer.price or 0 }}">
                             <td>
-                          {% if offer.images %}
-                             <img src="{{ url_for('static', filename='uploads/' ~ offer.images[0]) }}" 
-                            class="img-thumbnail" style="width:60px;height:60px;" alt="صورة العقار">
-                             {% else %}
-                    <span class="text-muted">لا توجد صورة</span>
-                         {% endif %}
-                       </td>
+                                {% if offer.images %}
+                                <img src="{{ url_for('static', filename='uploads/' ~ offer.images[0]) }}" 
+                                     class="img-thumbnail" style="width:60px;height:60px;" alt="صورة العقار">
+                                {% else %}
+                                <span class="text-muted">لا توجد صورة</span>
+                                {% endif %}
+                            </td>
                             <td>{{ offer.unit_type }}</td>
                             <td>{{ offer.floor }}</td>
                             <td>{{ offer.area or '-' }}</td>
@@ -77,21 +92,13 @@
                             <td>
                                 <div class="d-flex gap-1">
                                     {% if current_user.has_permission('rental' + district.replace('وسط','m').replace('جنوب','w') + '_offers_edit') %}
-                                    <a href="{% if district == 'وسط' %}
-                                                 {{ url_for('edit_rentalm_offer', offer_id=offer.id) }}
-                                              {% elif district == 'جنوب' %}
-                                                 {{ url_for('edit_rentalw_offer', offer_id=offer.id) }}
-                                              {% endif %}"
+                                    <a href="{% if district == 'وسط' %}{{ url_for('edit_rentalm_offer', offer_id=offer.id) }}{% elif district == 'جنوب' %}{{ url_for('edit_rentalw_offer', offer_id=offer.id) }}{% endif %}"
                                        class="btn btn-sm btn-warning" onclick="event.stopPropagation();">
                                         <i class="fas fa-edit"></i>
                                     </a>
                                     {% endif %}
                                     {% if current_user.has_permission('rental' + district.replace('وسط','m').replace('جنوب','w') + '_offers_delete') %}
-                                    <a href="{% if district == 'وسط' %}
-                                                 {{ url_for('delete_rentalm_offer', offer_id=offer.id) }}
-                                              {% elif district == 'جنوب' %}
-                                                 {{ url_for('delete_rentalw_offer', offer_id=offer.id) }}
-                                              {% endif %}"
+                                    <a href="{% if district == 'وسط' %}{{ url_for('delete_rentalm_offer', offer_id=offer.id) }}{% elif district == 'جنوب' %}{{ url_for('delete_rentalw_offer', offer_id=offer.id) }}{% endif %}"
                                        class="btn btn-sm btn-danger" onclick="event.stopPropagation(); return confirm('هل أنت متأكد من حذف هذا العرض؟')">
                                         <i class="fas fa-trash"></i>
                                     </a>
@@ -112,12 +119,38 @@
 </div>
 
 <script>
+// فتح تفاصيل العرض عند النقر على الصف
 document.addEventListener("DOMContentLoaded", function() {
     document.querySelectorAll(".offer-row").forEach(function(row) {
         row.addEventListener("click", function() {
-            window.location.href = row.dataset.url;
+            if (row.style.display !== "none") {
+                window.location.href = row.dataset.url;
+            }
         });
     });
 });
+
+// فلترة العروض بالكلمة والسعر
+function filterOffers() {
+    const search = document.getElementById("searchInput").value.toLowerCase();
+    const minPrice = parseFloat(document.getElementById("minPrice").value) || 0;
+    const maxPrice = parseFloat(document.getElementById("maxPrice").value) || Infinity;
+
+    document.querySelectorAll(".offer-row").forEach(row => {
+        const unit = row.dataset.unit.toLowerCase();
+        const detalis = row.dataset.detalis.toLowerCase();
+        const marketer = row.dataset.marketer.toLowerCase();
+        const price = parseFloat(row.dataset.price);
+
+        const matchSearch = search === "" || unit.includes(search) || detalis.includes(search) || marketer.includes(search);
+        const matchPrice = price >= minPrice && price <= maxPrice;
+
+        if (matchSearch && matchPrice) {
+            row.style.display = "";
+        } else {
+            row.style.display = "none";
+        }
+    });
+}
 </script>
 {% endblock %}
