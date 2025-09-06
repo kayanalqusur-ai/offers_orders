@@ -27,7 +27,6 @@
                         <th>السوم</th>
                         <th>حد البيع</th>
                         <th>الموقع</th>
-                        <th>التفاصيل</th>
                         <th>المسوق</th>
                         <th>الحالة</th>
                         <th>تاريخ الإنشاء</th>
@@ -58,7 +57,6 @@
                     -
                 {% endif %}
             </td>
-            <td>{{ offer.detalis or '-' }}</td>
             <td>{{ offer.marketer or '-' }}</td>
             <td>
                 {% if offer.status == 'متاح' %}
