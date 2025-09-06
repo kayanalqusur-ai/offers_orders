@@ -24,31 +24,29 @@ except Exception:
 
 import boto3
 from flask import current_app
+from werkzeug.utils import secure_filename
 
 def s3_client():
     return boto3.client(
         "s3",
-        aws_access_key_id=current_app.config['AWS_ACCESS_KEY_ID'],
-        aws_secret_access_key=current_app.config['AWS_SECRET_ACCESS_KEY'],
-        region_name=current_app.config['AWS_REGION']
+        aws_access_key_id=os.environ.get('AWS_ACCESS_KEY_ID'),
+        aws_secret_access_key=os.environ.get('AWS_SECRET_ACCESS_KEY'),
+        region_name=os.environ.get('AWS_REGION')
     )
-
-
-from werkzeug.utils import secure_filename
-import uuid
 
 def upload_file_to_s3(file):
     client = s3_client()
     filename = secure_filename(file.filename)
     unique_filename = f"{uuid.uuid4().hex}_{filename}"
+    
     client.upload_fileobj(
         file,
-        current_app.config['AWS_BUCKET_NAME'],
+        os.environ.get('AWS_BUCKET_NAME'),
         unique_filename,
-        ExtraArgs={'ACL': 'public-read'}  # يجعل الملف متاح للجميع
+        ExtraArgs={'ACL': 'public-read'}  # يخلي الملف متاح للجميع
     )
-    # إرجاع رابط مباشر للملف
-    return f"https://{current_app.config['AWS_BUCKET_NAME']}.s3.{current_app.config['AWS_REGION']}.amazonaws.com/{unique_filename}"
+    
+    return f"https://{os.environ.get('AWS_BUCKET_NAME')}.s3.{os.environ.get('AWS_REGION')}.amazonaws.com/{unique_filename}"
 
 # ================== تهيئة التطبيق ==================
 app = Flask(__name__)

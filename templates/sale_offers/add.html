@@ -56,25 +56,22 @@
                         <input type="number" step="0.01" class="form-control" name="sale_limit" value="{{ offer.sale_limit if offer else '' }}">
                     </div>
 
-        <!-- نوع المالك -->
-        <div class="mb-3">
-  <label class="form-label">صفة مالك العقار</label>
-  <select id="owner_type" name="owner_type" class="form-select" onchange="toggleOtherOwnerType(this)">
-    <option value="">اختر...</option>
-    <option value="مالك مباشر" {% if offer and offer.owner_type == "مالك مباشر" %}selected{% endif %}>مالك مباشر</option>
-    <option value="وسيط" {% if offer and offer.owner_type == "وسيط" %}selected{% endif %}>وسيط</option>
-    <option value="وكيل" {% if offer and offer.owner_type == "وكيل" %}selected{% endif %}>وكيل</option>
-    <option value="other" {% if offer and offer.owner_type not in ["مالك مباشر","وسيط","وكيل"] %}selected{% endif %}>أخرى</option>
-  </select>
+                    <!-- نوع المالك -->
+                    <div class="mb-3">
+                        <label class="form-label">صفة مالك العقار</label>
+                        <select id="owner_type" name="owner_type" class="form-select" onchange="toggleOtherOwnerType(this)">
+                            <option value="">اختر...</option>
+                            <option value="مالك مباشر" {% if offer and offer.owner_type == "مالك مباشر" %}selected{% endif %}>مالك مباشر</option>
+                            <option value="وسيط" {% if offer and offer.owner_type == "وسيط" %}selected{% endif %}>وسيط</option>
+                            <option value="وكيل" {% if offer and offer.owner_type == "وكيل" %}selected{% endif %}>وكيل</option>
+                            <option value="other" {% if offer and offer.owner_type not in ["مالك مباشر","وسيط","وكيل"] %}selected{% endif %}>أخرى</option>
+                        </select>
 
-  <input type="text" id="other_owner_type" name="owner_type_other" 
-         class="form-control mt-2" 
-         placeholder="أدخل صفة المالك" 
-         style="display:none;"
-         value="{% if offer and offer.owner_type not in ['مالك مباشر','وسيط','وكيل'] %}{{ offer.owner_type }}{% endif %}">
-</div>
-
-
+                        <input type="text" id="other_owner_type" 
+                               class="form-control mt-2" 
+                               placeholder="أدخل صفة المالك"
+                               value="{% if offer and offer.owner_type not in ['مالك مباشر','وسيط','وكيل'] %}{{ offer.owner_type }}{% endif %}">
+                    </div>
 
                     <div class="mb-3">
                         <label class="form-label">الموقع</label>
@@ -106,22 +103,20 @@
                         <textarea class="form-control" name="notes" rows="3">{{ offer.notes if offer else '' }}</textarea>
                     </div>
 
-        <!-- رفع الصور -->
-        <div class="mb-3">
-    <label class="form-label">صور العرض (1-5)</label>
-    {% for i in range(1,6) %}
-        <input type="file" name="image{{ i }}" accept="image/*" class="form-control mb-1">
-        {% if offer and offer.images and offer.images|length >= i %}
-            <div class="mt-1">
-                <small>الصورة الحالية:</small><br>
-                <img src="{{ offer.images[i-1] }}" 
-                     alt="صورة" class="img-thumbnail" width="150">
-            </div>
-        {% endif %}
-    {% endfor %}
-</div>
-
-
+                    <!-- رفع الصور -->
+                    <div class="mb-3">
+                        <label class="form-label">صور العرض (1-5)</label>
+                        {% for i in range(1,6) %}
+                            <input type="file" name="image{{ i }}" accept="image/*" class="form-control mb-1">
+                            {% if offer and offer.images and offer.images|length >= i %}
+                                <div class="mt-1">
+                                    <small>الصورة الحالية:</small><br>
+                                    <img src="{{ offer.images[i-1] }}" 
+                                         alt="صورة" class="img-thumbnail" width="150">
+                                </div>
+                            {% endif %}
+                        {% endfor %}
+                    </div>
 
                     <div class="mb-3 d-flex justify-content-between">
                         <button type="submit" class="btn btn-primary">{% if offer %}💾 حفظ التعديلات{% else %}➕ إضافة العرض{% endif %}</button>
@@ -135,20 +130,26 @@
 {% endblock %}
 
 <script>
-function toggleOtherOwnerType(select) {
-  const input = document.getElementById('other_owner_type');
-  if (select.value === 'other') {
-    input.style.display = 'block';
-    input.name = 'owner_type'; // عشان يترسل مع الفورم
-  } else {
-    input.style.display = 'none';
-    input.name = 'owner_type_other'; // تجاهل
-  }
+function toggleOtherOwnerType(selectOrValue) {
+    const otherInput = document.getElementById('other_owner_type');
+    let value = typeof selectOrValue === 'string' ? selectOrValue : selectOrValue.value;
+
+    if (value === 'other') {
+        otherInput.style.display = 'block';
+        otherInput.name = 'owner_type'; // إرسال النص كصنف المالك
+    } else {
+        otherInput.style.display = 'none';
+        otherInput.value = '';
+        otherInput.name = 'owner_type_other'; // تجاهل الحقل
+    }
 }
 
-// استدعاء عند تحميل الصفحة (لو في عرض محفوظ)
+// عند تحميل الصفحة لتحديد العرض الأولي
 window.addEventListener("DOMContentLoaded", function() {
-  const select = document.getElementById('owner_type');
-  toggleOtherOwnerType(select);
+    const select = document.getElementById('owner_type');
+    toggleOtherOwnerType(select.value);
+    select.addEventListener('change', function() {
+        toggleOtherOwnerType(this.value);
+    });
 });
 </script>
