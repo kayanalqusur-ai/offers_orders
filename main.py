@@ -35,6 +35,9 @@ def s3_client():
     )
 
 def upload_file_to_s3(file):
+    if not file or file.filename == '':
+        return None  # لا شيء للرفع
+
     client = s3_client()
     filename = secure_filename(file.filename)
     unique_filename = f"{uuid.uuid4().hex}_{filename}"
@@ -43,8 +46,9 @@ def upload_file_to_s3(file):
         file,
         os.environ.get('AWS_BUCKET_NAME'),
         unique_filename,
-        ExtraArgs={'ACL': 'public-read'}  # يخلي الملف متاح للجميع
+        ExtraArgs={'ACL': 'public-read'}
     )
+    
     
     return f"https://{os.environ.get('AWS_BUCKET_NAME')}.s3.{os.environ.get('AWS_REGION')}.amazonaws.com/{unique_filename}"
 
@@ -85,6 +89,7 @@ def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 def s3_client():
+    """إرجاع عميل S3 باستخدام إعدادات المشروع"""
     return boto3.client(
         "s3",
         aws_access_key_id=current_app.config['AWS_ACCESS_KEY_ID'],
@@ -93,28 +98,40 @@ def s3_client():
     )
 
 def save_file(file):
-    """رفع الصورة إلى S3 وإرجاع رابط مباشر"""
+    """
+    رفع ملف إلى S3 وإرجاع الرابط المباشر.
+    """
+    if not file or file.filename == '':
+        return None  # لا شيء للرفع
+
+    if not allowed_file(file.filename):
+        return None  # صيغة غير مسموح بها
+
     client = s3_client()
-    name = secure_filename(file.filename)
-    unique_filename = f"{uuid.uuid4().hex}_{name}"
-    
+    filename = secure_filename(file.filename)
+    unique_filename = f"{uuid.uuid4().hex}_{filename}"
+
     client.upload_fileobj(
         file,
         current_app.config['AWS_BUCKET_NAME'],
         unique_filename,
-        ExtraArgs={'ACL': 'public-read', 'ContentType': file.content_type}  # يجعل الصورة عامة
+        ExtraArgs={'ACL': 'public-read', 'ContentType': file.content_type}
     )
-    
-    # إرجاع رابط مباشر للعرض
+
     return f"https://{current_app.config['AWS_BUCKET_NAME']}.s3.{current_app.config['AWS_REGION']}.amazonaws.com/{unique_filename}"
 
 def remove_files(file_list):
-    """حذف الصور القديمة من S3"""
+    """
+    حذف ملفات من S3 باستخدام روابطها.
+    file_list: قائمة روابط الصور
+    """
     client = s3_client()
     for url in file_list:
         key = url.split('/')[-1]  # استخراج اسم الملف من الرابط
-        client.delete_object(Bucket=current_app.config['AWS_BUCKET_NAME'], Key=key)
-
+        try:
+            client.delete_object(Bucket=current_app.config['AWS_BUCKET_NAME'], Key=key)
+        except Exception as e:
+            print(f"Error deleting {key}: {e}")
 # ================== صلاحيات ==================
 def permission_required(permission):
     def decorator(f):
@@ -127,6 +144,11 @@ def permission_required(permission):
         return decorated_function
     return decorator
 
+
+def generate_unique_filename(filename):
+    """إرجاع اسم ملف فريد باستخدام UUID"""
+    name = secure_filename(filename)
+    return f"{uuid.uuid4().hex}_{name}"
 
 # ================== تسجيل الدخول ==================
 @app.route('/login', methods=['GET', 'POST'])

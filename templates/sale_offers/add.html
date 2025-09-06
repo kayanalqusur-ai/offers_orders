@@ -58,14 +58,21 @@
 
                     <!-- نوع المالك -->
                     <div class="mb-3">
-                        <label class="form-label">صفة مالك العقار</label>
-                        <select id="owner_type" name="owner_type" class="form-select" onchange="toggleOtherOwnerType(this)">
-                            <option value="">اختر...</option>
-                            <option value="مالك مباشر" {% if offer and offer.owner_type == "مالك مباشر" %}selected{% endif %}>مالك مباشر</option>
-                            <option value="وسيط" {% if offer and offer.owner_type == "وسيط" %}selected{% endif %}>وسيط</option>
-                            <option value="وكيل" {% if offer and offer.owner_type == "وكيل" %}selected{% endif %}>وكيل</option>
-                            <option value="other" {% if offer and offer.owner_type not in ["مالك مباشر","وسيط","وكيل"] %}selected{% endif %}>أخرى</option>
-                        </select>
+    <label class="form-label">صفة مالك العقار</label>
+    <select id="owner_type" class="form-select">
+        <option value="">اختر...</option>
+        <option value="مالك مباشر" {% if offer and offer.owner_type == "مالك مباشر" %}selected{% endif %}>مالك مباشر</option>
+        <option value="وسيط" {% if offer and offer.owner_type == "وسيط" %}selected{% endif %}>وسيط</option>
+        <option value="وكيل" {% if offer and offer.owner_type == "وكيل" %}selected{% endif %}>وكيل</option>
+        <option value="other" {% if offer and offer.owner_type not in ["مالك مباشر","وسيط","وكيل"] %}selected{% endif %}>أخرى</option>
+    </select>
+
+    <input type="text" id="other_owner_type" 
+           class="form-control mt-2" 
+           placeholder="أدخل صفة المالك" 
+           value="{% if offer and offer.owner_type not in ['مالك مباشر','وسيط','وكيل'] %}{{ offer.owner_type }}{% endif %}"
+           style="display: none;">
+</div>
 
                         <input type="text" id="other_owner_type" 
                                class="form-control mt-2" 
@@ -129,6 +136,7 @@
 </div>
 {% endblock %}
 
+
 <script>
 function toggleOtherOwnerType(selectOrValue) {
     const otherInput = document.getElementById('other_owner_type');
@@ -136,7 +144,7 @@ function toggleOtherOwnerType(selectOrValue) {
 
     if (value === 'other') {
         otherInput.style.display = 'block';
-        otherInput.name = 'owner_type'; // إرسال النص كصنف المالك
+        otherInput.name = 'owner_type'; // لإرسال النص كصنف المالك
     } else {
         otherInput.style.display = 'none';
         otherInput.value = '';
@@ -144,10 +152,13 @@ function toggleOtherOwnerType(selectOrValue) {
     }
 }
 
-// عند تحميل الصفحة لتحديد العرض الأولي
+// عند تحميل الصفحة لتحديد القيمة الأولية للمالك
 window.addEventListener("DOMContentLoaded", function() {
     const select = document.getElementById('owner_type');
-    toggleOtherOwnerType(select.value);
+    const initialValue = select.value;
+
+    toggleOtherOwnerType(initialValue); // إخفاء المربع إذا لم يكن "أخرى"
+
     select.addEventListener('change', function() {
         toggleOtherOwnerType(this.value);
     });
