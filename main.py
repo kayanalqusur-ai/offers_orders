@@ -87,7 +87,7 @@ def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 def s3_client():
-    return ***REMOVED***.client(
+    return boto3.client(
         "s3",
         aws_access_key_id=current_app.config['AWS_ACCESS_KEY_ID'],
         aws_secret_access_key=current_app.config['AWS_SECRET_ACCESS_KEY'],
