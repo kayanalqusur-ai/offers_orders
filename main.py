@@ -79,7 +79,10 @@ def save_file(file):
             file,
             os.environ.get('AWS_BUCKET_NAME') or current_app.config.get('AWS_BUCKET_NAME'),
             unique_filename,
-            ExtraArgs={'ACL': 'public-read', 'ContentType': file.content_type}
+            ExtraArgs={
+                'ACL': 'public-read',          # لتعيين صلاحية القراءة للجميع
+                'ContentType': file.content_type
+            }
         )
 
         url = f"https://{os.environ.get('AWS_BUCKET_NAME') or current_app.config.get('AWS_BUCKET_NAME')}.s3.{os.environ.get('AWS_REGION') or current_app.config.get('AWS_REGION')}.amazonaws.com/{unique_filename}"
@@ -134,7 +137,6 @@ def load_user(user_id):
     return Employee.query.get(int(user_id))
 
 
-# ================== مساعدات الملفات ==================
 
 
 
