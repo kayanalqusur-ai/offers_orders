@@ -2,6 +2,8 @@ from extensions import db
 from flask_login import UserMixin
 from datetime import datetime
 import json
+from sqlalchemy.types import JSON
+from sqlalchemy.dialects.postgresql import ARRAY
 
 
 class Employee(db.Model, UserMixin):
@@ -68,7 +70,7 @@ class RentalOffer(db.Model):
     marketer = db.Column(db.String(100))
     notes = db.Column(db.Text)
     status = db.Column(db.String(50))
-    images = db.Column(db.PickleType)
+    images = db.Column(ARRAY(db.String), default=[])
     district = db.Column(db.String(50))
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
@@ -91,7 +93,7 @@ class SaleOffer(db.Model):
     marketer = db.Column(db.String(100))
     owner_type = db.Column(db.String(50))
     status = db.Column(db.String(50))
-    images = db.Column(db.PickleType)
+    images = db.Column(ARRAY(db.String), default=[])
     notes = db.Column(db.Text)
     created_by = db.Column(db.String(100))
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
@@ -111,11 +113,8 @@ class RentalMOffer(db.Model):
     marketer = db.Column(db.String(100))
     status = db.Column(db.String(50))
     notes = db.Column(db.Text)
-    image1 = db.Column(db.String(200))
-    image2 = db.Column(db.String(200))
-    image3 = db.Column(db.String(200))
-    image4 = db.Column(db.String(200))
-    image5 = db.Column(db.String(200))
+    images = db.Column(ARRAY(db.String), default=[])
+
 
 
 class RentalWOffer(db.Model):
@@ -132,11 +131,8 @@ class RentalWOffer(db.Model):
     marketer = db.Column(db.String(100))
     status = db.Column(db.String(50))
     notes = db.Column(db.Text)
-    image1 = db.Column(db.String(200))
-    image2 = db.Column(db.String(200))
-    image3 = db.Column(db.String(200))
-    image4 = db.Column(db.String(200))
-    image5 = db.Column(db.String(200))
+    images = db.Column(ARRAY(db.String), default=[])
+
 
 
 class Orders(db.Model):
