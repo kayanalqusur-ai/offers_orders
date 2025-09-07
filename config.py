@@ -1,9 +1,12 @@
 # config.py
 import os
-
+from dotenv import load_dotenv
 class Config:
     # مفتاح التشفير
     SECRET_KEY = os.environ.get("SESSION_SECRET", "dev-secret-key-change-in-production")
+    
+    SQLALCHEMY_DATABASE_URI = os.getenv("DATABASE_URL")
+
 
     # قاعدة البيانات
     db_url = os.environ.get(
