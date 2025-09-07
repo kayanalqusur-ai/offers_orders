@@ -67,7 +67,7 @@ class RentalOffer(db.Model):
     floor = db.Column(db.String(50))
     area = db.Column(db.Float)
     price = db.Column(db.Float)
-    detalis = db.Column(db.String(50))  # أصلحت spelling
+    details = db.Column(db.String(50))  # أصلحت spelling
     owner_type = db.Column(db.String(50))
     location = db.Column(db.String(200))
     marketer = db.Column(db.String(100))
