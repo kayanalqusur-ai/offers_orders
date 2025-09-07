@@ -392,9 +392,9 @@ def add_rentalm_offer():
             unit_type=request.form['unit_type'].strip()[:200],
             floor=request.form['floor'].strip()[:100],
             area=float(request.form['area']) if request.form.get('area') else None,
-            price=float(request.form['price']) if request.form.get('price') else None,
+            price=float(request.form.get('price', '0').replace(',', '')) if request.form.get('price') else None,
             details=request.form.get('details', '').strip()[:2100],
-            owner_type = request.form.get("owner_type") or request.form.get("owner_type_other"),
+            owner_type=request.form.get("owner_type") or request.form.get("owner_type_other"),
             location=request.form.get('location', '').strip()[:2100],
             marketer=request.form.get('marketer', '').strip()[:100],
             notes=request.form.get('notes', '').strip()[:2100],
@@ -437,7 +437,7 @@ def edit_rentalm_offer(offer_id):
         offer.unit_type = request.form.get('unit_type', '').strip()[:200]
         offer.floor = request.form.get('floor', '').strip()[:100]
         offer.area = float(request.form['area']) if request.form.get('area') else None
-        offer.price = float(request.form['price']) if request.form.get('price') else None
+        area = float(request.form.get('area', '0').replace(',', '')) if request.form.get('area') else None
         offer.details = request.form.get('details', '').strip()[:2100]
         offer.owner_type = request.form.get("owner_type") or request.form.get("owner_type_other")
         offer.location = request.form.get('location', '').strip()[:2100]
@@ -528,7 +528,7 @@ def add_rentalw_offer():
             unit_type=request.form['unit_type'].strip()[:200],
             floor=request.form['floor'].strip()[:100],
             area=float(request.form['area']) if request.form.get('area') else None,
-            price=float(request.form['price']) if request.form.get('price') else None,
+            price=float(request.form.get('price', '0').replace(',', '')) if request.form.get('price') else None,
             details=request.form.get('details', '').strip()[:2100],
             owner_type = request.form.get("owner_type") or request.form.get("owner_type_other"),
             location=request.form.get('location', '').strip()[:2100],
@@ -573,7 +573,7 @@ def edit_rentalw_offer(offer_id):
         offer.unit_type = request.form['unit_type'].strip()[:200]
         offer.floor = request.form['floor'].strip()[:100]
         offer.area = float(request.form['area']) if request.form.get('area') else None
-        offer.price = float(request.form['price']) if request.form.get('price') else None
+        area = float(request.form.get('area', '0').replace(',', '')) if request.form.get('area') else None
         offer.details = request.form.get('details', '').strip()[:2100]
         offer.owner_type = request.form.get("owner_type") or request.form.get("owner_type_other")
         offer.location = request.form.get('location', '').strip()[:2100]
@@ -636,10 +636,10 @@ def add_salesm_offer():
             front=request.form.get('front', '').strip()[:200],
             street=request.form.get('street', '').strip()[:200],
             area=float(request.form['area']) if request.form.get('area') else None,
-            price=float(request.form['price']) if request.form.get('price') else None,
-            sale_limit=float(request.form['sale_limit']) if request.form.get('sale_limit') else None,
+            price=float(request.form.get('price', '0').replace(',', '')) if request.form.get('price') else None,
+            sale_limit=float(request.form.get('sale_limit', '0').replace(',', '')) if request.form.get('sale_limit') else None,
             details=request.form.get('details', '').strip()[:2100],
-            owner_type = request.form.get("owner_type") or request.form.get("owner_type_other"),
+            owner_type=request.form.get("owner_type") or request.form.get("owner_type_other"),
             location=request.form.get('location', '').strip()[:2100],
             marketer=request.form.get('marketer', '').strip()[:100],
             status=request.form.get('status', '').strip()[:50],
@@ -685,8 +685,8 @@ def edit_salesm_offer(offer_id):
         offer.front = request.form.get('front','').strip()[:200]
         offer.street = request.form.get('street','').strip()[:200]
         offer.area = float(request.form['area']) if request.form.get('area') else None
-        offer.price = float(request.form['price']) if request.form.get('price') else None
-        offer.sale_limit = float(request.form['sale_limit']) if request.form.get('sale_limit') else None
+        offer.price = float(request.form.get('price', '0').replace(',', '')) if request.form.get('price') else None
+        offer.sale_limit = float(request.form.get('sale_limit', '0').replace(',', '')) if request.form.get('sale_limit') else None
         offer.details = request.form.get('details','').strip()[:1000]
         offer.owner_type = request.form.get("owner_type") or request.form.get("owner_type_other")
         offer.location = request.form.get('location','').strip()[:2100]
@@ -756,14 +756,14 @@ def add_salesw_offer():
                     images.append(url)
 
         offer = SaleOffer(
-            unit_type=request.form['unit_type'][200:],
+            unit_type=request.form['unit_type'][:200],
             district='جنوب',
             area=float(request.form['area']) if request.form['area'] else None,
             floor=request.form['floor'][:200],
             front=request.form['front'][:200],
             street=request.form['street'][:200],
-            price=float(request.form['price']) if request.form['price'] else None,
-            sale_limit=float(request.form['sale_limit']) if request.form['sale_limit'] else None,
+            price=float(request.form.get('price', '0').replace(',', '')) if request.form.get('price') else None,
+            sale_limit=float(request.form.get('sale_limit', '0').replace(',', '')) if request.form.get('sale_limit') else None,
             location=request.form['location'][:2100],
             details=request.form['details'][:2100],
             marketer=request.form['marketer'][:100],
@@ -815,8 +815,8 @@ def edit_salesw_offer(offer_id):
         offer.floor = (request.form.get('floor') or '')[:200]
         offer.front = (request.form.get('front') or '')[:200]
         offer.street = (request.form.get('street') or '')[:200]
-        offer.price = float(request.form['price']) if request.form.get('price') else None
-        offer.sale_limit = float(request.form['sale_limit']) if request.form.get('sale_limit') else None
+        offer.price = float(request.form.get('price', '0').replace(',', '')) if request.form.get('price') else None
+        offer.sale_limit = float(request.form.get('sale_limit', '0').replace(',', '')) if request.form.get('sale_limit') else None
         offer.location = (request.form.get('location') or '')[:2100]
         offer.details = (request.form.get('details') or '')[:2100]
         offer.marketer = (request.form.get('marketer') or '')[:100]
@@ -876,7 +876,7 @@ def add_request():
         customer_name = request.form.get('customer_name', '').strip()[:200]
         unit_type = request.form.get('unit_type', '').strip()[:200]
         area = request.form.get('area', '').strip()[:200]
-        price = request.form.get('price', '').strip()[:200]
+        price = request.form.get('price', '0').strip()[:200]
         location = request.form.get('location', '').strip()[:200]
         phone = request.form.get('phone', '').strip()[:200]
         marketer = request.form.get('marketer', '').strip()[:100]
@@ -913,7 +913,7 @@ def edit_request(id):
     if request.method == 'POST':
         req.unit_type = request.form['unit_type'].strip()[:200]
         req.area = request.form['area'].strip()[:200]
-        req.price = request.form['price'].strip()[:200]
+        req.price = request.form.get('price', '0').strip()[:200]
         req.location = request.form['location'].strip()[:200]
         req.phone = request.form['phone'].strip()[:200]
         req.marketer = request.form['marketer'].strip()[:200]
