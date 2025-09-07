@@ -12,45 +12,96 @@ from flask_login import (
     logout_user, current_user
 )
 from werkzeug.security import generate_password_hash, check_password_hash
+from werkzeug.utils import secure_filename
+from flask import current_app
 
 from extensions import db, migrate
+import boto3
+from config import Config
 
-# تحميل المتغيرات من .env (لو موجود)
+ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
+
+
 try:
     from dotenv import load_dotenv
-    load_dotenv()
+    dotenv_path = "/etc/secrets/aws.env"  # مسار Secret File في Render
+    load_dotenv(dotenv_path)
 except Exception:
     pass
 
-import boto3
-from flask import current_app
-from werkzeug.utils import secure_filename
+def allowed_file(filename):
+    """التأكد من أن الملف مسموح بصيغته"""
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 def s3_client():
+    """
+    إرجاع عميل S3 باستخدام إعدادات المشروع.
+    يتحقق من وجود المتغيرات قبل الاستخدام.
+    """
+    aws_access_key = os.environ.get('AWS_ACCESS_KEY_ID') or current_app.config.get('AWS_ACCESS_KEY_ID')
+    aws_secret_key = os.environ.get('AWS_SECRET_ACCESS_KEY') or current_app.config.get('AWS_SECRET_ACCESS_KEY')
+    aws_region = os.environ.get('AWS_REGION') or current_app.config.get('AWS_REGION')
+
+    if not aws_access_key or not aws_secret_key or not aws_region:
+        raise RuntimeError("AWS credentials or region not configured!")
+
     return boto3.client(
         "s3",
-        aws_access_key_id=os.environ.get('AWS_ACCESS_KEY_ID'),
-        aws_secret_access_key=os.environ.get('AWS_SECRET_ACCESS_KEY'),
-        region_name=os.environ.get('AWS_REGION')
+        aws_access_key_id=aws_access_key,
+        aws_secret_access_key=aws_secret_key,
+        region_name=aws_region
     )
 
 def upload_file_to_s3(file):
-    if not file or file.filename == '':
-        return None  # لا شيء للرفع
+    return save_file(file)
 
-    client = s3_client()
-    filename = secure_filename(file.filename)
-    unique_filename = f"{uuid.uuid4().hex}_{filename}"
-    
-    client.upload_fileobj(
-        file,
-        os.environ.get('AWS_BUCKET_NAME'),
-        unique_filename,
-        ExtraArgs={'ACL': 'public-read'}
-    )
-    
-    
-    return f"https://{os.environ.get('AWS_BUCKET_NAME')}.s3.{os.environ.get('AWS_REGION')}.amazonaws.com/{unique_filename}"
+
+def save_file(file):
+    """
+    رفع ملف إلى S3 وإرجاع الرابط المباشر.
+    يرجع None إذا لم يكن هناك ملف أو صيغة غير مسموح بها.
+    """
+    if not file or file.filename == '':
+        return None
+
+    if not allowed_file(file.filename):
+        return None
+
+    try:
+        client = s3_client()
+        filename = secure_filename(file.filename)
+        unique_filename = f"{uuid.uuid4().hex}_{filename}"
+
+        client.upload_fileobj(
+            file,
+            os.environ.get('AWS_BUCKET_NAME') or current_app.config.get('AWS_BUCKET_NAME'),
+            unique_filename,
+            ExtraArgs={'ACL': 'public-read', 'ContentType': file.content_type}
+        )
+
+        url = f"https://{os.environ.get('AWS_BUCKET_NAME') or current_app.config.get('AWS_BUCKET_NAME')}.s3.{os.environ.get('AWS_REGION') or current_app.config.get('AWS_REGION')}.amazonaws.com/{unique_filename}"
+        return url
+
+    except Exception as e:
+        print(f"Error uploading file to S3: {e}")
+        return None
+
+def remove_files(file_list):
+    """
+    حذف ملفات من S3 باستخدام روابطها.
+    file_list: قائمة روابط الصور
+    """
+    try:
+        client = s3_client()
+        bucket_name = os.environ.get('AWS_BUCKET_NAME') or current_app.config.get('AWS_BUCKET_NAME')
+        for url in file_list:
+            key = url.split('/')[-1]  # استخراج اسم الملف من الرابط
+            try:
+                client.delete_object(Bucket=bucket_name, Key=key)
+            except Exception as e:
+                print(f"Error deleting {key}: {e}")
+    except Exception as e:
+        print(f"S3 client not configured properly: {e}")
 
 # ================== تهيئة التطبيق ==================
 app = Flask(__name__)
@@ -82,73 +133,8 @@ def load_user(user_id):
 
 # ================== مساعدات الملفات ==================
 
-ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
 
-def allowed_file(filename):
-    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
-def s3_client():
-    """
-    إرجاع عميل S3 باستخدام إعدادات المشروع.
-    يتحقق من وجود المتغيرات قبل الاستخدام.
-    """
-    aws_access_key = current_app.config.get('AWS_ACCESS_KEY_ID')
-    aws_secret_key = current_app.config.get('AWS_SECRET_ACCESS_KEY')
-    aws_region = current_app.config.get('AWS_REGION')
-
-    if not aws_access_key or not aws_secret_key or not aws_region:
-        raise RuntimeError("AWS credentials or region not configured in current_app.config!")
-
-    return boto3.client(
-        "s3",
-        aws_access_key_id=aws_access_key,
-        aws_secret_access_key=aws_secret_key,
-        region_name=aws_region
-    )
-
-def save_file(file):
-    """
-    رفع ملف إلى S3 وإرجاع الرابط المباشر.
-    يرجع None إذا لم يكن هناك ملف أو صيغة غير مسموح بها.
-    """
-    if not file or file.filename == '':
-        return None
-
-    if not allowed_file(file.filename):
-        return None
-
-    try:
-        client = s3_client()
-        filename = secure_filename(file.filename)
-        unique_filename = f"{uuid.uuid4().hex}_{filename}"
-
-        client.upload_fileobj(
-            file,
-            current_app.config.get('AWS_BUCKET_NAME'),
-            unique_filename,
-            ExtraArgs={'ACL': 'public-read', 'ContentType': file.content_type}
-        )
-
-        return f"https://{current_app.config.get('AWS_BUCKET_NAME')}.s3.{current_app.config.get('AWS_REGION')}.amazonaws.com/{unique_filename}"
-    except Exception as e:
-        print(f"Error uploading file to S3: {e}")
-        return None
-
-def remove_files(file_list):
-    """
-    حذف ملفات من S3 باستخدام روابطها.
-    file_list: قائمة روابط الصور
-    """
-    try:
-        client = s3_client()
-        for url in file_list:
-            key = url.split('/')[-1]  # استخراج اسم الملف من الرابط
-            try:
-                client.delete_object(Bucket=current_app.config.get('AWS_BUCKET_NAME'), Key=key)
-            except Exception as e:
-                print(f"Error deleting {key}: {e}")
-    except Exception as e:
-        print(f"S3 client not configured properly: {e}")
 # ================== صلاحيات ==================
 def permission_required(permission):
     def decorator(f):
@@ -831,7 +817,7 @@ def edit_salesw_offer(offer_id):
     return render_template('sale_offers/add.html', offer=offer, district='جنوب', district_name='جنوب')
 
 
-@app.route('/salesw_offers/delete/<int:offer_id>')
+@app.route('/salesw_offers/delete/<int:offer_id>', methods=['POST'])
 @login_required
 @permission_required('salesw_offers_delete')
 def delete_salesw_offer(offer_id):
