@@ -390,16 +390,16 @@ def add_rentalm_offer():
                     images.append(url)
 
         offer = RentalOffer(
-            unit_type=request.form['unit_type'].strip()[:50],
-            floor=request.form['floor'].strip()[:50],
+            unit_type=request.form['unit_type'].strip()[:200],
+            floor=request.form['floor'].strip()[:100],
             area=float(request.form['area']) if request.form.get('area') else None,
             price=float(request.form['price']) if request.form.get('price') else None,
-            details=request.form.get('details', '').strip()[:500],
+            details=request.form.get('details', '').strip()[:2100],
             owner_type = request.form.get("owner_type") or request.form.get("owner_type_other"),
-            location=request.form.get('location', '').strip()[:200],
+            location=request.form.get('location', '').strip()[:2100],
             marketer=request.form.get('marketer', '').strip()[:100],
-            notes=request.form.get('notes', '').strip()[:200],
-            status=request.form['status'].strip(),
+            notes=request.form.get('notes', '').strip()[:2100],
+            status=request.form['status'].strip()[:50],
             district='وسط',
             images=images
         )
@@ -435,15 +435,15 @@ def edit_rentalm_offer(offer_id):
             offer.images = new_images
 
         # تحديث باقي بيانات العرض دائمًا
-        offer.unit_type = request.form.get('unit_type', '').strip()[:50]
-        offer.floor = request.form.get('floor', '').strip()[:50]
+        offer.unit_type = request.form.get('unit_type', '').strip()[:200]
+        offer.floor = request.form.get('floor', '').strip()[:100]
         offer.area = float(request.form['area']) if request.form.get('area') else None
         offer.price = float(request.form['price']) if request.form.get('price') else None
-        offer.details = request.form.get('details', '').strip()[:500]
+        offer.details = request.form.get('details', '').strip()[:2100]
         offer.owner_type = request.form.get("owner_type") or request.form.get("owner_type_other")
-        offer.location = request.form.get('location', '').strip()[:200]
+        offer.location = request.form.get('location', '').strip()[:2100]
         offer.marketer = request.form.get('marketer', '').strip()[:100]
-        offer.notes = request.form.get('notes', '').strip()[:200]
+        offer.notes = request.form.get('notes', '').strip()[:2100]
         offer.status = request.form.get('status', '').strip()[:50]
 
         db.session.commit()
@@ -526,15 +526,15 @@ def add_rentalw_offer():
                 if url:
                     images.append(url)
         offer = RentalOffer(
-            unit_type=request.form['unit_type'].strip()[:50],
-            floor=request.form['floor'].strip()[:50],
+            unit_type=request.form['unit_type'].strip()[:200],
+            floor=request.form['floor'].strip()[:100],
             area=float(request.form['area']) if request.form.get('area') else None,
             price=float(request.form['price']) if request.form.get('price') else None,
-            details=request.form.get('details', '').strip()[:500],
+            details=request.form.get('details', '').strip()[:2100],
             owner_type = request.form.get("owner_type") or request.form.get("owner_type_other"),
-            location=request.form.get('location', '').strip()[:200],
+            location=request.form.get('location', '').strip()[:2100],
             marketer=request.form.get('marketer', '').strip()[:100],
-            notes=request.form.get('notes', '').strip()[:200],
+            notes=request.form.get('notes', '').strip()[:2100],
             status=request.form['status'].strip()[:50],
             district='جنوب',
             images=images
@@ -571,15 +571,15 @@ def edit_rentalw_offer(offer_id):
             remove_files(offer.images or [])
             offer.images = new_images
 
-        offer.unit_type = request.form['unit_type'].strip()[:50]
-        offer.floor = request.form['floor'].strip()[:50]
+        offer.unit_type = request.form['unit_type'].strip()[:200]
+        offer.floor = request.form['floor'].strip()[:100]
         offer.area = float(request.form['area']) if request.form.get('area') else None
         offer.price = float(request.form['price']) if request.form.get('price') else None
-        offer.details = request.form.get('details', '').strip()[:1000]
+        offer.details = request.form.get('details', '').strip()[:2100]
         offer.owner_type = request.form.get("owner_type") or request.form.get("owner_type_other")
-        offer.location = request.form.get('location', '').strip()[:200]
+        offer.location = request.form.get('location', '').strip()[:2100]
         offer.marketer = request.form.get('marketer', '').strip()[:100]
-        offer.notes = request.form.get('notes', '').strip()[:200]
+        offer.notes = request.form.get('notes', '').strip()[:2100]
         offer.status = request.form['status'].strip()[:50]
         offer.updated_at = datetime.utcnow()
 
@@ -632,19 +632,19 @@ def add_salesm_offer():
                     images.append(url)
 
         offer = SaleOffer(
-            unit_type=request.form.get('unit_type', '').strip()[:50],
-            floor=request.form.get('floor', '').strip()[:50],
-            front=request.form.get('front', '').strip()[:50],
-            street=request.form.get('street', '').strip()[:50],
+            unit_type=request.form.get('unit_type', '').strip()[:200],
+            floor=request.form.get('floor', '').strip()[:200],
+            front=request.form.get('front', '').strip()[:200],
+            street=request.form.get('street', '').strip()[:200],
             area=float(request.form['area']) if request.form.get('area') else None,
             price=float(request.form['price']) if request.form.get('price') else None,
             sale_limit=float(request.form['sale_limit']) if request.form.get('sale_limit') else None,
-            details=request.form.get('details', '').strip()[:1000],
+            details=request.form.get('details', '').strip()[:2100],
             owner_type = request.form.get("owner_type") or request.form.get("owner_type_other"),
-            location=request.form.get('location', '').strip()[:200],
+            location=request.form.get('location', '').strip()[:2100],
             marketer=request.form.get('marketer', '').strip()[:100],
             status=request.form.get('status', '').strip()[:50],
-            notes=request.form.get('notes', '').strip()[:200],
+            notes=request.form.get('notes', '').strip()[:2100],
             district='وسط',
             images=images,
             created_at=datetime.utcnow(),
@@ -681,19 +681,19 @@ def edit_salesm_offer(offer_id):
             remove_files(offer.images or [])
             offer.images = new_images
 
-        offer.unit_type = request.form['unit_type'].strip()[:50]
-        offer.floor = request.form['floor'].strip()[:50]
-        offer.front = request.form.get('front','').strip()[:50]
-        offer.street = request.form.get('street','').strip()[:50]
+        offer.unit_type = request.form['unit_type'].strip()[:200]
+        offer.floor = request.form['floor'].strip()[:200]
+        offer.front = request.form.get('front','').strip()[:200]
+        offer.street = request.form.get('street','').strip()[:200]
         offer.area = float(request.form['area']) if request.form.get('area') else None
         offer.price = float(request.form['price']) if request.form.get('price') else None
         offer.sale_limit = float(request.form['sale_limit']) if request.form.get('sale_limit') else None
         offer.details = request.form.get('details','').strip()[:1000]
         offer.owner_type = request.form.get("owner_type") or request.form.get("owner_type_other")
-        offer.location = request.form.get('location','').strip()[:200]
+        offer.location = request.form.get('location','').strip()[:2100]
         offer.marketer = request.form.get('marketer','').strip()[:100]
-        offer.notes = request.form.get('notes','').strip()[:200]
-        offer.status = request.form['status'].strip()
+        offer.notes = request.form.get('notes','').strip()[:2100]
+        offer.status = request.form['status'].strip()[:50]
         offer.updated_at = datetime.utcnow()
 
         db.session.commit()
@@ -757,21 +757,21 @@ def add_salesw_offer():
                     images.append(url)
 
         offer = SaleOffer(
-            unit_type=request.form['unit_type'][:50],
+            unit_type=request.form['unit_type'][200:],
             district='جنوب',
             area=float(request.form['area']) if request.form['area'] else None,
-            floor=request.form['floor'][:50],
-            front=request.form['front'][:50],
-            street=request.form['street'][:50],
+            floor=request.form['floor'][:200],
+            front=request.form['front'][:200],
+            street=request.form['street'][:200],
             price=float(request.form['price']) if request.form['price'] else None,
             sale_limit=float(request.form['sale_limit']) if request.form['sale_limit'] else None,
-            location=request.form['location'][:200],
-            details=request.form['details'][:1000],
+            location=request.form['location'][:2100],
+            details=request.form['details'][:2100],
             marketer=request.form['marketer'][:100],
             owner_type=request.form.get("owner_type") or request.form.get("owner_type_other"),
             status=request.form['status'][:50],
             images=images,
-            notes=request.form['notes'][:200],
+            notes=request.form['notes'][:2100],
             created_by=current_user.username,
             created_at=datetime.utcnow(),
             updated_at=datetime.utcnow()
@@ -811,19 +811,19 @@ def edit_salesw_offer(offer_id):
             remove_files(offer.images or [])
             offer.images = new_images
 
-        offer.unit_type = (request.form.get('unit_type') or '')[:50]
+        offer.unit_type = (request.form.get('unit_type') or '')[:200]
         offer.area = float(request.form['area']) if request.form.get('area') else None
-        offer.floor = (request.form.get('floor') or '')[:50]
-        offer.front = (request.form.get('front') or '')[:50]
-        offer.street = (request.form.get('street') or '')[:50]
+        offer.floor = (request.form.get('floor') or '')[:200]
+        offer.front = (request.form.get('front') or '')[:200]
+        offer.street = (request.form.get('street') or '')[:200]
         offer.price = float(request.form['price']) if request.form.get('price') else None
         offer.sale_limit = float(request.form['sale_limit']) if request.form.get('sale_limit') else None
-        offer.location = (request.form.get('location') or '')[:200]
-        offer.details = (request.form.get('details') or '')[:1000]
+        offer.location = (request.form.get('location') or '')[:2100]
+        offer.details = (request.form.get('details') or '')[:2100]
         offer.marketer = (request.form.get('marketer') or '')[:100]
         offer.owner_type = (request.form.get("owner_type") or request.form.get("owner_type_other"))[:50]
         offer.status = (request.form.get('status') or '')[:50]
-        offer.notes = (request.form.get('notes') or '')[:200]
+        offer.notes = (request.form.get('notes') or '')[:2100]
 
 # تحديث وقت التعديل
         offer.updated_at = datetime.utcnow()
@@ -874,14 +874,14 @@ def orders():
 @login_required
 def add_request():
     if request.method == 'POST':
-        customer_name = request.form.get('customer_name', '').strip()[:50]
-        unit_type = request.form.get('unit_type', '').strip()[:50]
-        area = request.form.get('area', '').strip()[:50]
-        price = request.form.get('price', '').strip()[:50]
+        customer_name = request.form.get('customer_name', '').strip()[:200]
+        unit_type = request.form.get('unit_type', '').strip()[:200]
+        area = request.form.get('area', '').strip()[:200]
+        price = request.form.get('price', '').strip()[:200]
         location = request.form.get('location', '').strip()[:200]
-        phone = request.form.get('phone', '').strip()[:50]
+        phone = request.form.get('phone', '').strip()[:200]
         marketer = request.form.get('marketer', '').strip()[:100]
-        notes = request.form.get('notes', '').strip()[:200]
+        notes = request.form.get('notes', '').strip()[:2100]
 
         if not customer_name or not unit_type:
             flash("يرجى ملء جميع الحقول المطلوبة", "danger")
@@ -912,13 +912,13 @@ def add_request():
 def edit_request(id):
     req = Orders.query.get_or_404(id)
     if request.method == 'POST':
-        req.unit_type = request.form['unit_type'].strip()[:50]
-        req.area = request.form['area'].strip()[:50]
-        req.price = request.form['price'].strip()[:50]
+        req.unit_type = request.form['unit_type'].strip()[:200]
+        req.area = request.form['area'].strip()[:200]
+        req.price = request.form['price'].strip()[:200]
         req.location = request.form['location'].strip()[:200]
-        req.phone = request.form['phone'].strip()[:50]
-        req.marketer = request.form['marketer'].strip()[:100]
-        req.notes = request.form['notes'].strip()[:200]
+        req.phone = request.form['phone'].strip()[:200]
+        req.marketer = request.form['marketer'].strip()[:200]
+        req.notes = request.form['notes'].strip()[:2100]
         db.session.commit()
         add_log(f"تعديل الطلب: {req.customer_name}")
         flash("تم تعديل الطلب ✏️", "success")
