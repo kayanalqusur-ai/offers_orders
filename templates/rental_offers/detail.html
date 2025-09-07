@@ -37,18 +37,22 @@
     {% if offer.notes %}
       <p><strong>ملاحظات:</strong> {{ offer.notes }}</p>
     {% endif %}
-{% if offer.images %}
+
+     {% if offer.images and offer.images|length > 0 %}
   <div class="mt-3">
     <h5>الصور:</h5>
     <div class="d-flex flex-wrap">
       {% for img in offer.images %}
-        <div class="me-2 mb-2">
-          <img src="{{ img }}" class="img-thumbnail" style="width:150px;height:150px;" alt="صورة العقار">
-        </div>
+        {% if img %}
+          <div class="me-2 mb-2">
+            <img src="{{ img }}" class="img-thumbnail" style="width:150px;height:150px;" alt="صورة العقار">
+          </div>
+        {% endif %}
       {% endfor %}
     </div>
   </div>
 {% endif %}
+  
 
   </div>
   <div class="card-footer">

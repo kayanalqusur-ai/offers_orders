@@ -19,6 +19,9 @@ from extensions import db, migrate
 import boto3
 from config import Config
 
+from sqlalchemy.dialects.postgresql import ARRAY
+from sqlalchemy.types import JSON
+
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
 
 
@@ -403,19 +406,17 @@ def edit_rentalm_offer(offer_id):
     offer = RentalOffer.query.get_or_404(offer_id)
 
     if request.method == 'POST':
-        # حفظ الصور الجديدة
-        new_images = []
-        for i in range(1, 6):
-            file = request.files.get(f'image{i}')
-            if file and allowed_file(file.filename):
-                filename = save_file(file)
-                if filename:
-                    new_images.append(filename)
+       new_images = []
+       for i in range(1, 6):
+        file = request.files.get(f'image{i}')
+        if file and allowed_file(file.filename):
+            url = upload_file_to_s3(file)
+            if url:
+                new_images.append(url)
 
-        # إذا تم رفع صور جديدة، احذف القديمة
-        if new_images:
-            remove_files(offer.images or [])
-            offer.images = new_images
+    if new_images:
+        remove_files(offer.images or [])
+        offer.images = new_images
 
         offer.unit_type = request.form['unit_type'].strip()[:50]
         offer.floor = request.form['floor'].strip()[:50]
@@ -538,17 +539,17 @@ def edit_rentalw_offer(offer_id):
     offer = RentalOffer.query.get_or_404(offer_id)
 
     if request.method == 'POST':
-        new_images = []
-        for i in range(1, 6):
-            file = request.files.get(f'image{i}')
-            if file and allowed_file(file.filename):
-                filename = save_file(file)
-                if filename:
-                    new_images.append(filename)
+       new_images = []
+       for i in range(1, 6):
+        file = request.files.get(f'image{i}')
+        if file and allowed_file(file.filename):
+            url = upload_file_to_s3(file)
+            if url:
+                new_images.append(url)
 
-        if new_images:
-            remove_files(offer.images or [])
-            offer.images = new_images
+    if new_images:
+        remove_files(offer.images or [])
+        offer.images = new_images
 
         offer.unit_type = request.form['unit_type'].strip()[:50]
         offer.floor = request.form['floor'].strip()[:50]
@@ -646,14 +647,17 @@ def edit_salesm_offer(offer_id):
     offer = SaleOffer.query.get_or_404(offer_id)
 
     if request.method == 'POST':
-        new_images = []
-        for file in request.files.getlist('images'):
-            if file and allowed_file(file.filename):
-                new_images.append(save_file(file))
+       new_images = []
+       for i in range(1, 6):
+        file = request.files.get(f'image{i}')
+        if file and allowed_file(file.filename):
+            url = upload_file_to_s3(file)
+            if url:
+                new_images.append(url)
 
-        if new_images:
-            remove_files(offer.images or [])
-            offer.images = new_images
+    if new_images:
+        remove_files(offer.images or [])
+        offer.images = new_images
 
         offer.unit_type = request.form['unit_type'].strip()[:50]
         offer.floor = request.form['floor'].strip()[:50]
@@ -772,20 +776,17 @@ def edit_salesw_offer(offer_id):
     offer = SaleOffer.query.get_or_404(offer_id)
 
     if request.method == 'POST':
-        # حفظ الصور الجديدة
-        new_images = []
-        for i in range(1, 6):
-            file = request.files.get(f'image{i}')
-            if file and allowed_file(file.filename):
-                filename = save_file(file)
-                if filename:
-                    new_images.append(filename)
+       new_images = []
+       for i in range(1, 6):
+        file = request.files.get(f'image{i}')
+        if file and allowed_file(file.filename):
+            url = upload_file_to_s3(file)
+            if url:
+                new_images.append(url)
 
-        # إذا تم رفع صور جديدة، احذف القديمة
-        if new_images:
-            remove_files(offer.images or [])
-            offer.images = new_images
-
+    if new_images:
+        remove_files(offer.images or [])
+        offer.images = new_images
 
         offer.unit_type = (request.form.get('unit_type') or '')[:50]
         offer.area = float(request.form['area']) if request.form.get('area') else None
