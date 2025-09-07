@@ -368,14 +368,15 @@ def rentalm_offers():
 @permission_required('rentalm_offers_add')
 def add_rentalm_offer():
     if request.method == 'POST':
-          images = []
-          for i in range(1, 6):
-             file = request.files.get(f'image{i}')
-             if file and allowed_file(file.filename):
+        images = []
+        for i in range(1, 6):
+            file = request.files.get(f'image{i}')
+            if file and allowed_file(file.filename):
                 url = upload_file_to_s3(file)
-             if url:
-                images.append(url)
-          offer = RentalOffer(
+                if url:
+                    images.append(url)
+
+        offer = RentalOffer(
             unit_type=request.form['unit_type'].strip()[:50],
             floor=request.form['floor'].strip()[:50],
             area=float(request.form['area']) if request.form.get('area') else None,
@@ -389,12 +390,12 @@ def add_rentalm_offer():
             district='وسط',
             images=images
         )
-          db.session.add(offer)
-          db.session.commit()
+        db.session.add(offer)
+        db.session.commit()
   
-          add_log(f"إضافة عرض إيجار وسط: {offer.unit_type}")
-          flash("تمت إضافة العرض بنجاح ✅", "success")
-          return redirect(url_for('rentalm_offers'))
+        add_log(f"إضافة عرض إيجار وسط: {offer.unit_type}")
+        flash("تمت إضافة العرض بنجاح ✅", "success")
+        return redirect(url_for('rentalm_offers'))
 
     return render_template('rental_offers/add.html', district='وسط', district_name='وسط')
 
@@ -406,20 +407,23 @@ def edit_rentalm_offer(offer_id):
     offer = RentalOffer.query.get_or_404(offer_id)
 
     if request.method == 'POST':
-       new_images = []
-       for i in range(1, 6):
-        file = request.files.get(f'image{i}')
-        if file and allowed_file(file.filename):
-            url = upload_file_to_s3(file)
-            if url:
-                new_images.append(url)
+        # معالجة الصور
+        new_images = []
+        for i in range(1, 6):
+            file = request.files.get(f'image{i}')
+            if file and allowed_file(file.filename):
+                url = upload_file_to_s3(file)
+                if url:
+                    new_images.append(url)
 
-    if new_images:
-        remove_files(offer.images or [])
-        offer.images = new_images
+        # إذا تم رفع صور جديدة فقط
+        if new_images:
+            remove_files(offer.images or [])
+            offer.images = new_images
 
-        offer.unit_type = request.form['unit_type'].strip()[:50]
-        offer.floor = request.form['floor'].strip()[:50]
+        # تحديث باقي بيانات العرض دائمًا
+        offer.unit_type = request.form.get('unit_type', '').strip()[:50]
+        offer.floor = request.form.get('floor', '').strip()[:50]
         offer.area = float(request.form['area']) if request.form.get('area') else None
         offer.price = float(request.form['price']) if request.form.get('price') else None
         offer.detalis = request.form.get('detalis', '').strip()[:500]
@@ -427,7 +431,7 @@ def edit_rentalm_offer(offer_id):
         offer.location = request.form.get('location', '').strip()[:200]
         offer.marketer = request.form.get('marketer', '').strip()[:100]
         offer.notes = request.form.get('notes', '').strip()[:200]
-        offer.status = request.form['status'].strip()[:50]
+        offer.status = request.form.get('status', '').strip()[:50]
 
         db.session.commit()
 
@@ -435,6 +439,7 @@ def edit_rentalm_offer(offer_id):
         flash("تم تحديث العرض بنجاح ✅", "success")
         return redirect(url_for('rentalm_offers'))
 
+    # عند GET فقط
     return render_template('rental_offers/add.html', offer=offer, district='وسط', district_name='وسط')
 
 
@@ -500,14 +505,14 @@ def rentalw_offers():
 @permission_required('rentalw_offers_add')
 def add_rentalw_offer():
     if request.method == 'POST':
-          images = []
-          for i in range(1, 6):
-             file = request.files.get(f'image{i}')
-             if file and allowed_file(file.filename):
+        images = []
+        for i in range(1, 6):
+            file = request.files.get(f'image{i}')
+            if file and allowed_file(file.filename):
                 url = upload_file_to_s3(file)
-             if url:
-                images.append(url)
-          offer = RentalOffer(
+                if url:
+                    images.append(url)
+        offer = RentalOffer(
             unit_type=request.form['unit_type'].strip()[:50],
             floor=request.form['floor'].strip()[:50],
             area=float(request.form['area']) if request.form.get('area') else None,
@@ -522,12 +527,12 @@ def add_rentalw_offer():
             images=images
         )
 
-          db.session.add(offer)
-          db.session.commit()
+        db.session.add(offer)
+        db.session.commit()
 
-          add_log(f"إضافة عرض إيجار جنوب: {offer.unit_type}")
-          flash("تمت إضافة العرض بنجاح ✅", "success")
-          return redirect(url_for('rentalw_offers'))
+        add_log(f"إضافة عرض إيجار جنوب: {offer.unit_type}")
+        flash("تمت إضافة العرض بنجاح ✅", "success")
+        return redirect(url_for('rentalw_offers'))
 
     return render_template('rental_offers/add.html', district='جنوب', district_name='جنوب')
 
@@ -539,17 +544,19 @@ def edit_rentalw_offer(offer_id):
     offer = RentalOffer.query.get_or_404(offer_id)
 
     if request.method == 'POST':
-       new_images = []
-       for i in range(1, 6):
-        file = request.files.get(f'image{i}')
-        if file and allowed_file(file.filename):
-            url = upload_file_to_s3(file)
-            if url:
-                new_images.append(url)
+        # معالجة الصور
+        new_images = []
+        for i in range(1, 6):
+            file = request.files.get(f'image{i}')
+            if file and allowed_file(file.filename):
+                url = upload_file_to_s3(file)
+                if url:
+                    new_images.append(url)
 
-    if new_images:
-        remove_files(offer.images or [])
-        offer.images = new_images
+        # إذا تم رفع صور جديدة فقط
+        if new_images:
+            remove_files(offer.images or [])
+            offer.images = new_images
 
         offer.unit_type = request.form['unit_type'].strip()[:50]
         offer.floor = request.form['floor'].strip()[:50]
@@ -603,15 +610,15 @@ def salesm_offers():
 @permission_required('salesm_offers_add')
 def add_salesm_offer():
     if request.method == 'POST':
-          images = []
-          for i in range(1, 6):
-             file = request.files.get(f'image{i}')
-             if file and allowed_file(file.filename):
+        images = []
+        for i in range(1, 6):
+            file = request.files.get(f'image{i}')
+            if file and allowed_file(file.filename):
                 url = upload_file_to_s3(file)
-             if url:
-                images.append(url)
+                if url:
+                    images.append(url)
 
-          offer = SaleOffer(
+        offer = SaleOffer(
             unit_type=request.form.get('unit_type', '').strip()[:50],
             floor=request.form.get('floor', '').strip()[:50],
             front=request.form.get('front', '').strip()[:50],
@@ -631,11 +638,11 @@ def add_salesm_offer():
             updated_at=datetime.utcnow(),
             created_by=current_user.username
         )
-          db.session.add(offer)
-          db.session.commit()
-          add_log(f"إضافة عرض بيع وسط: {offer.unit_type}")
-          flash("تمت إضافة العرض بنجاح ✅", "success")
-          return redirect(url_for('salesm_offers'))
+        db.session.add(offer)
+        db.session.commit()
+        add_log(f"إضافة عرض بيع وسط: {offer.unit_type}")
+        flash("تمت إضافة العرض بنجاح ✅", "success")
+        return redirect(url_for('salesm_offers'))
 
     return render_template('sale_offers/add.html', district='وسط', district_name='وسط')
 
@@ -647,17 +654,19 @@ def edit_salesm_offer(offer_id):
     offer = SaleOffer.query.get_or_404(offer_id)
 
     if request.method == 'POST':
-       new_images = []
-       for i in range(1, 6):
-        file = request.files.get(f'image{i}')
-        if file and allowed_file(file.filename):
-            url = upload_file_to_s3(file)
-            if url:
-                new_images.append(url)
+        # معالجة الصور
+        new_images = []
+        for i in range(1, 6):
+            file = request.files.get(f'image{i}')
+            if file and allowed_file(file.filename):
+                url = upload_file_to_s3(file)
+                if url:
+                    new_images.append(url)
 
-    if new_images:
-        remove_files(offer.images or [])
-        offer.images = new_images
+        # إذا تم رفع صور جديدة فقط
+        if new_images:
+            remove_files(offer.images or [])
+            offer.images = new_images
 
         offer.unit_type = request.form['unit_type'].strip()[:50]
         offer.floor = request.form['floor'].strip()[:50]
@@ -726,16 +735,16 @@ def salesw_offers():
 @login_required
 @permission_required('salesw_offers_add')
 def add_salesw_offer():
-     if request.method == 'POST':
-          images = []
-          for i in range(1, 6):
-             file = request.files.get(f'image{i}')
-             if file and allowed_file(file.filename):
+    if request.method == 'POST':
+        images = []
+        for i in range(1, 6):
+            file = request.files.get(f'image{i}')
+            if file and allowed_file(file.filename):
                 url = upload_file_to_s3(file)
-             if url:
-                images.append(url)
+                if url:
+                    images.append(url)
 
-          offer = SaleOffer(
+        offer = SaleOffer(
             unit_type=request.form['unit_type'][:50],
             district='جنوب',
             area=float(request.form['area']) if request.form['area'] else None,
@@ -756,17 +765,17 @@ def add_salesw_offer():
             updated_at=datetime.utcnow()
    )
 
-          db.session.add(offer)
-          db.session.commit()
+        db.session.add(offer)
+        db.session.commit()
 
-          log = Log(user=current_user.username, action=f"إضافة عرض بيع جنوب: {offer.unit_type}")
-          db.session.add(log)
-          db.session.commit()
+        log = Log(user=current_user.username, action=f"إضافة عرض بيع جنوب: {offer.unit_type}")
+        db.session.add(log)
+        db.session.commit()
 
-          flash("تمت إضافة العرض بنجاح ✅", "success")
-          return redirect(url_for('salesw_offers'))
+        flash("تمت إضافة العرض بنجاح ✅", "success")
+        return redirect(url_for('salesw_offers'))
 
-     return render_template('sale_offers/add.html', district='جنوب', district_name='جنوب')
+    return render_template('sale_offers/add.html', district='جنوب', district_name='جنوب')
 
 
 @app.route('/salesw_offers/edit/<int:offer_id>', methods=['GET', 'POST'])
@@ -776,17 +785,19 @@ def edit_salesw_offer(offer_id):
     offer = SaleOffer.query.get_or_404(offer_id)
 
     if request.method == 'POST':
-       new_images = []
-       for i in range(1, 6):
-        file = request.files.get(f'image{i}')
-        if file and allowed_file(file.filename):
-            url = upload_file_to_s3(file)
-            if url:
-                new_images.append(url)
+        # معالجة الصور
+        new_images = []
+        for i in range(1, 6):
+            file = request.files.get(f'image{i}')
+            if file and allowed_file(file.filename):
+                url = upload_file_to_s3(file)
+                if url:
+                    new_images.append(url)
 
-    if new_images:
-        remove_files(offer.images or [])
-        offer.images = new_images
+        # إذا تم رفع صور جديدة فقط
+        if new_images:
+            remove_files(offer.images or [])
+            offer.images = new_images
 
         offer.unit_type = (request.form.get('unit_type') or '')[:50]
         offer.area = float(request.form['area']) if request.form.get('area') else None
