@@ -2,7 +2,6 @@ import os
 from datetime import datetime
 from functools import wraps
 import uuid
-
 from flask import (
     Flask, render_template, request, redirect,
     url_for, flash, send_from_directory
@@ -22,14 +21,14 @@ from config import Config
 from sqlalchemy.dialects.postgresql import ARRAY
 from sqlalchemy.types import JSON
 from flask import Flask
+from flask_sqlalchemy import SQLAlchemy
 
+from extensions import db
 def create_app():
     app = Flask(__name__)
-    app.config.from_object(Config)
-
+    ...
     db.init_app(app)
     migrate.init_app(app, db)
-
     return app
 
 
