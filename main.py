@@ -92,7 +92,6 @@ def save_file(file):
             os.environ.get('AWS_BUCKET_NAME') or current_app.config.get('AWS_BUCKET_NAME'),
             unique_filename,
             ExtraArgs={
-                'ACL': 'public-read',          # لتعيين صلاحية القراءة للجميع
                 'ContentType': file.content_type
             }
         )
