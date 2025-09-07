@@ -93,7 +93,7 @@ class SaleOffer(db.Model):
     price = db.Column(db.Float)
     sale_limit = db.Column(db.Float)
     location = db.Column(db.String(300))
-    detalis = db.Column(db.Text)
+    details = db.Column(db.Text)
     marketer = db.Column(db.String(100))
     owner_type = db.Column(db.String(50))
     status = db.Column(db.String(50))
