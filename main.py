@@ -702,8 +702,7 @@ def edit_salesm_offer(offer_id):
 
     return render_template('sale_offers/add.html', offer=offer, district='وسط', district_name='وسط')
 
-@app.route('/salesm_offers/delete/<int:offer_id>', methods=['POST'])
-
+@app.route('/salesm_offers/delete/<int:offer_id>',  methods=['POST', 'GET'])
 @login_required
 @permission_required('salesm_offers_delete')
 def delete_salesm_offer(offer_id):
@@ -842,7 +841,7 @@ def edit_salesw_offer(offer_id):
     return render_template('sale_offers/add.html', offer=offer, district='جنوب', district_name='جنوب')
 
 
-@app.route('/salesw_offers/delete/<int:offer_id>', methods=['POST'])
+@app.route('/salesw_offers/delete/<int:offer_id>', methods=['POST', 'GET'])
 @login_required
 @permission_required('salesw_offers_delete')
 def delete_salesw_offer(offer_id):
