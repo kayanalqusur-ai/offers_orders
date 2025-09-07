@@ -97,6 +97,7 @@ class SaleOffer(db.Model):
     notes = db.Column(db.Text)
     created_by = db.Column(db.String(100))
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
 
 class RentalMOffer(db.Model):
