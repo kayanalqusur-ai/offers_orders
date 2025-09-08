@@ -394,7 +394,7 @@ def add_rentalm_offer():
             area=float(request.form['area']) if request.form.get('area') else None,
             price=float(request.form.get('price', '0').replace(',', '')) if request.form.get('price') else None,
             details=request.form.get('details', '').strip()[:2100],
-            owner_type=request.form.get("owner_type")[:50],
+            owner_type=request.form.get("owner_type", '').strip()[:50],
             location=request.form.get('location', '').strip()[:2100],
             marketer=request.form.get('marketer', '').strip()[:100],
             notes=request.form.get('notes', '').strip()[:2100],
@@ -439,7 +439,7 @@ def edit_rentalm_offer(offer_id):
         offer.area = float(request.form['area']) if request.form.get('area') else None
         area = float(request.form.get('area', '0').replace(',', '')) if request.form.get('area') else None
         offer.details = request.form.get('details', '').strip()[:2100]
-        offer.owner_type = request.form.get("owner_type")[:50]
+        offer.owner_type = request.form.get("owner_type", '').strip()[:50]
         offer.location = request.form.get('location', '').strip()[:2100]
         offer.marketer = request.form.get('marketer', '').strip()[:100]
         offer.notes = request.form.get('notes', '').strip()[:2100]
@@ -530,7 +530,7 @@ def add_rentalw_offer():
             area=float(request.form['area']) if request.form.get('area') else None,
             price=float(request.form.get('price', '0').replace(',', '')) if request.form.get('price') else None,
             details=request.form.get('details', '').strip()[:2100],
-            owner_type=request.form.get("owner_type")[:50],
+            owner_type=request.form.get("owner_type", '').strip()[:50],
             location=request.form.get('location', '').strip()[:2100],
             marketer=request.form.get('marketer', '').strip()[:100],
             notes=request.form.get('notes', '').strip()[:2100],
@@ -575,7 +575,7 @@ def edit_rentalw_offer(offer_id):
         offer.area = float(request.form['area']) if request.form.get('area') else None
         area = float(request.form.get('area', '0').replace(',', '')) if request.form.get('area') else None
         offer.details = request.form.get('details', '').strip()[:2100]
-        offer.owner_type = request.form.get("owner_type")[:50]
+        offer.owner_type = request.form.get("owner_type", '').strip()[:50]
         offer.location = request.form.get('location', '').strip()[:2100]
         offer.marketer = request.form.get('marketer', '').strip()[:100]
         offer.notes = request.form.get('notes', '').strip()[:2100]
@@ -639,7 +639,7 @@ def add_salesm_offer():
             price=float(request.form.get('price', '0').replace(',', '')) if request.form.get('price') else None,
             sale_limit=float(request.form.get('sale_limit', '0').replace(',', '')) if request.form.get('sale_limit') else None,
             details=request.form.get('details', '').strip()[:2100],
-            owner_type=request.form.get("owner_type")[:50],
+            owner_type=request.form.get("owner_type", '').strip()[:50],
             location=request.form.get('location', '').strip()[:2100],
             marketer=request.form.get('marketer', '').strip()[:100],
             status=request.form.get('status', '').strip()[:50],
@@ -688,7 +688,7 @@ def edit_salesm_offer(offer_id):
         offer.price = float(request.form.get('price', '0').replace(',', '')) if request.form.get('price') else None
         offer.sale_limit = float(request.form.get('sale_limit', '0').replace(',', '')) if request.form.get('sale_limit') else None
         offer.details = request.form.get('details','').strip()[:1000]
-        offer.owner_type = request.form.get("owner_type")[:50]
+        offer.owner_type = request.form.get("owner_type", '').strip()[:50]
         offer.location = request.form.get('location','').strip()[:2100]
         offer.marketer = request.form.get('marketer','').strip()[:100]
         offer.notes = request.form.get('notes','').strip()[:2100]
@@ -767,7 +767,7 @@ def add_salesw_offer():
             location=request.form['location'][:2100],
             details=request.form['details'][:2100],
             marketer=request.form['marketer'][:100],
-            owner_type=request.form.get("owner_type")[:50],
+            owner_type=request.form.get("owner_type", '').strip()[:50],
             status=request.form['status'][:50],
             images=images,
             notes=request.form['notes'][:2100],
