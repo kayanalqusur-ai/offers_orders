@@ -1,6 +1,8 @@
 {% extends "base.html" %}
 
-{% block title %}{% if offer %}تعديل{% else %}إضافة{% endif %} عرض البيع - {{ district_name }}{% endblock %}
+{% block title %}
+{% if offer %}تعديل{% else %}إضافة{% endif %} عرض البيع - {{ district_name }}
+{% endblock %}
 
 {% block content %}
 <div class="row mb-4">
@@ -18,6 +20,8 @@
             </div>
             <div class="card-body">
                 <form method="POST" enctype="multipart/form-data">
+
+                    <!-- نوع الوحدة والمساحة -->
                     <div class="row">
                         <div class="col-md-6 mb-3">
                             <label class="form-label">نوع الوحدة</label>
@@ -29,6 +33,7 @@
                         </div>
                     </div>
 
+                    <!-- الطابق والواجهة -->
                     <div class="row">
                         <div class="col-md-6 mb-3">
                             <label class="form-label">الطابق</label>
@@ -40,6 +45,7 @@
                         </div>
                     </div>
 
+                    <!-- الشارع والسوم -->
                     <div class="row">
                         <div class="col-md-6 mb-3">
                             <label class="form-label">الشارع</label>
@@ -51,40 +57,43 @@
                         </div>
                     </div>
 
+                    <!-- حد البيع -->
                     <div class="mb-3">
                         <label class="form-label">حد البيع</label>
                         <input type="number" step="0.01" class="form-control" name="sale_limit" value="{{ offer.sale_limit if offer else '' }}">
                     </div>
 
-      <!-- نوع المالك -->
-<div class="mb-3">
-    <label class="form-label">صفة مالك العقار</label>
-<select id="owner_type" name="owner_type" class="form-select">
-    <option value="">اختر...</option>
-    <option value="مالك مباشر" {% if offer and offer.owner_type == "مالك مباشر" %}selected{% endif %}>مالك مباشر</option>
-    <option value="وسيط" {% if offer and offer.owner_type == "وسيط" %}selected{% endif %}>وسيط</option>
-    <option value="وكيل" {% if offer and offer.owner_type == "وكيل" %}selected{% endif %}>وكيل</option>
-    <option value="other" {% if offer and offer.owner_type not in ["مالك مباشر","وسيط","وكيل"] %}selected{% endif %}>أخرى</option>
-</select>
+                    <!-- نوع المالك -->
+                    <div class="mb-3">
+                        <label class="form-label">صفة مالك العقار</label>
+                        <select id="owner_type" name="owner_type" class="form-select">
+                            <option value="">اختر...</option>
+                            <option value="مالك مباشر" {% if offer and offer.owner_type == "مالك مباشر" %}selected{% endif %}>مالك مباشر</option>
+                            <option value="وسيط" {% if offer and offer.owner_type == "وسيط" %}selected{% endif %}>وسيط</option>
+                            <option value="وكيل" {% if offer and offer.owner_type == "وكيل" %}selected{% endif %}>وكيل</option>
+                            <option value="other" {% if offer and offer.owner_type not in ["مالك مباشر","وسيط","وكيل"] %}selected{% endif %}>أخرى</option>
+                        </select>
 
-<input type="text" id="other_owner_type" 
-       class="form-control mt-2" 
-       placeholder="أدخل صفة المالك"
-       value="{% if offer and offer.owner_type not in ['مالك مباشر','وسيط','وكيل'] %}{{ offer.owner_type }}{% endif %}"
-       style="display: none;">
+                        <input type="text" id="other_owner_type" 
+                               class="form-control mt-2" 
+                               placeholder="أدخل صفة المالك"
+                               value="{% if offer and offer.owner_type not in ['مالك مباشر','وسيط','وكيل'] %}{{ offer.owner_type }}{% endif %}"
+                               style="display: none;">
+                    </div>
 
-</div>
-
+                    <!-- الموقع -->
                     <div class="mb-3">
                         <label class="form-label">الموقع</label>
                         <input type="text" class="form-control" name="location" value="{{ offer.location if offer else '' }}">
                     </div>
 
+                    <!-- التفاصيل -->
                     <div class="mb-3">
                         <label class="form-label">التفاصيل</label>
                         <textarea class="form-control" name="details" rows="4">{{ offer.details if offer else '' }}</textarea>
                     </div>
 
+                    <!-- المسوق والحالة -->
                     <div class="row">
                         <div class="col-md-6 mb-3">
                             <label class="form-label">المسوق</label>
@@ -100,6 +109,7 @@
                         </div>
                     </div>
 
+                    <!-- الملاحظات -->
                     <div class="mb-3">
                         <label class="form-label">ملاحظات</label>
                         <textarea class="form-control" name="notes" rows="3">{{ offer.notes if offer else '' }}</textarea>
@@ -107,22 +117,23 @@
 
                     <!-- رفع الصور -->
                     <div class="mb-3">
-                  <label class="form-label">صور العرض (1-5)</label>
-                  {% for i in range(1, 6) %}
-                    <input type="file" name="image{{ i }}" accept="image/*" class="form-control mb-1">
-        
-                   {% if offer and offer.images and offer.images|length >= i and offer.images[i-1] %}
-                    <div class="mt-1">
-                           <small>الصورة الحالية:</small><br>
-                        <img src="{{ offer.images[i-1] }}" class="img-thumbnail" style="width:150px; height:150px;" alt="صورة العقار">
+                        <label class="form-label">صور العرض (1-5)</label>
+                        {% for i in range(1, 6) %}
+                            <input type="file" name="image{{ i }}" accept="image/*" class="form-control mb-1">
+                            {% if offer and offer.images and offer.images|length >= i and offer.images[i-1] %}
+                                <div class="mt-1">
+                                    <small>الصورة الحالية:</small><br>
+                                    <img src="{{ offer.images[i-1] }}" class="img-thumbnail" style="width:150px; height:150px;" alt="صورة العقار">
+                                </div>
+                            {% endif %}
+                        {% endfor %}
                     </div>
-                  {% endif %}
-              {% endfor %}
-         </div>  
 
-
+                    <!-- الأزرار -->
                     <div class="mb-3 d-flex justify-content-between">
-                        <button type="submit" class="btn btn-primary">{% if offer %}💾 حفظ التعديلات{% else %}➕ إضافة العرض{% endif %}</button>
+                        <button type="submit" class="btn btn-primary">
+                            {% if offer %}💾 حفظ التعديلات{% else %}➕ إضافة العرض{% endif %}
+                        </button>
                         <a href="{{ url_for('sales' + district.replace('وسط','m').replace('جنوب','w') + '_offers') }}" class="btn btn-secondary">إلغاء</a>
                     </div>
                 </form>
@@ -132,12 +143,11 @@
 </div>
 {% endblock %}
 
-
-
-
+{% block scripts %}
 <script>
 function toggleOtherOwnerType(select) {
     const otherInput = document.getElementById('other_owner_type');
+    if(!otherInput) return; // شرط التأكد من وجود العنصر
     if (select.value === 'other') {
         otherInput.style.display = 'block';
         otherInput.name = 'owner_type'; // نرسل قيمة النص كصنف المالك
@@ -150,12 +160,14 @@ function toggleOtherOwnerType(select) {
     }
 }
 
-window.addEventListener("DOMContentLoaded", function() {
+document.addEventListener("DOMContentLoaded", function() {
     const select = document.getElementById('owner_type');
-    toggleOtherOwnerType(select);
-    select.addEventListener('change', function() {
-        toggleOtherOwnerType(this);
-    });
+    if(select) {
+        toggleOtherOwnerType(select); // تهيئة الحالة الأولية
+        select.addEventListener('change', function() {
+            toggleOtherOwnerType(this);
+        });
+    }
 });
-
 </script>
+{% endblock %}
