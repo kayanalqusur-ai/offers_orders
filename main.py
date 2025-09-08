@@ -150,7 +150,6 @@ def load_user(user_id):
     return Employee.query.get(int(user_id))
 
 
-app = Flask(__name__)
 # ضبط لغة التطبيق الافتراضية على الألمانية
 app.config['BABEL_DEFAULT_LOCALE'] = 'de_DE'
 babel = Babel(app)
