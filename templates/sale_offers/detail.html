@@ -11,8 +11,8 @@
     <p><strong>نوع الوحدة:</strong> {{ offer.unit_type }}</p>
     <p><strong>المساحة:</strong> {{ offer.area or '-' }} م²</p>
     <p><strong>الطابق:</strong> {{ offer.floor or '-' }}</p>
-    <p><strong>السوم:</strong> {{ offer.price or '-' }} ريال</p>
-    <p><strong>حد البيع:</strong> {{ offer.sale_limit or '-' }} ريال</p>
+    <p><strong>السوم:</strong> {{ offer.price | price }} ريال</p>
+    <p><strong>حد البيع:</strong> {{ offer.sale_limit | price }} ريال</p>
     <p>
       <strong>الموقع:</strong>
       {% if offer.location %}
@@ -45,13 +45,27 @@
       {% for img in offer.images %}
         {% if img %}
           <div class="me-2 mb-2">
-            <img src="{{ img }}" class="img-thumbnail" style="width:150px;height:150px;" alt="صورة العقار">
+            <!-- الصورة المصغرة -->
+            <img src="{{ img }}" class="img-thumbnail" style="width:150px;height:150px;cursor:pointer;"
+                 data-bs-toggle="modal" data-bs-target="#imageModal{{ loop.index }}">
+
+            <!-- النافذة المنبثقة لكل صورة -->
+            <div class="modal fade" id="imageModal{{ loop.index }}" tabindex="-1">
+              <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                  <div class="modal-body text-center">
+                    <img src="{{ img }}" class="img-fluid" alt="صورة العقار">
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         {% endif %}
       {% endfor %}
     </div>
   </div>
 {% endif %}
+
 
 
   <div class="card-footer">

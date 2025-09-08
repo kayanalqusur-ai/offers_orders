@@ -17,6 +17,7 @@ from flask import current_app
 from extensions import db, migrate
 import boto3
 from config import Config
+from flask_babel import Babel, format_number
 
 from sqlalchemy.dialects.postgresql import ARRAY
 from sqlalchemy.types import JSON
@@ -146,6 +147,14 @@ login_manager.login_view = 'login'
 def load_user(user_id):
     return Employee.query.get(int(user_id))
 
+
+babel = Babel(app)
+
+@app.template_filter("price")
+def format_price(value):
+    if value is None:
+        return ""
+    return format_number(value, locale="de_DE")  # يعطي 1.000.000
 
 
 

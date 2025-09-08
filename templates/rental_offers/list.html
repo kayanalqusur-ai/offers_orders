@@ -68,8 +68,8 @@
 
                             <td>{{ offer.unit_type }}</td>
                             <td>{{ offer.floor }}</td>
-                            <td>{{ offer.area or '-' }}</td>
-                            <td>{{ offer.price or '-' }}</td>
+                            <td>{{ offer.area | price }}</td>
+                            <td>{{ offer.price | price }}</td>
                             <td>
                                 {% if offer.location %}
                                     <a href="https://www.google.com/maps?q={{ offer.location | urlencode }}" target="_blank">
