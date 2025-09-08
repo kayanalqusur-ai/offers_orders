@@ -16,3 +16,4 @@ psycopg2-binary>=2.9.7
 boto3==1.28.12
 python-dotenv==1.0.1
 
+Flask-Babel==3.1.0
