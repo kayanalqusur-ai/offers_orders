@@ -42,26 +42,27 @@
   <div class="mt-3">
     <h5>الصور:</h5>
     <div class="d-flex flex-wrap">
-      {% for img in offer.images %}
-        {% if img %}
-          <div class="me-2 mb-2">
-            <!-- الصورة المصغرة -->
-            <img src="{{ img }}" class="img-thumbnail" style="width:150px;height:150px;cursor:pointer;"
-                 data-bs-toggle="modal" data-bs-target="#imageModal{{ loop.index }}">
+     {% for img in offer.images %}
+  {% if img %}
+    <div class="me-2 mb-2">
+      <!-- الصورة المصغرة -->
+      <img src="{{ img.thumbnail_url }}" class="img-thumbnail" style="width:150px;height:150px;cursor:pointer;"
+           data-bs-toggle="modal" data-bs-target="#imageModal{{ loop.index }}">
 
-            <!-- النافذة المنبثقة لكل صورة -->
-            <div class="modal fade" id="imageModal{{ loop.index }}" tabindex="-1">
-              <div class="modal-dialog modal-dialog-centered">
-                <div class="modal-content">
-                  <div class="modal-body text-center">
-                    <img src="{{ img }}" class="img-fluid" alt="صورة العقار">
-                  </div>
-                </div>
-              </div>
+      <!-- النافذة المنبثقة -->
+      <div class="modal fade" id="imageModal{{ loop.index }}" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+          <div class="modal-content">
+            <div class="modal-body text-center">
+              <img src="{{ img.original_url }}" class="img-fluid" alt="صورة العقار">
             </div>
           </div>
-        {% endif %}
-      {% endfor %}
+        </div>
+      </div>
+    </div>
+  {% endif %}
+{% endfor %}
+
     </div>
   </div>
 {% endif %}
