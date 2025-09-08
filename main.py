@@ -17,7 +17,9 @@ from flask import current_app
 from extensions import db, migrate
 import boto3
 from config import Config
-from flask_babel import Babel, format_number
+from flask import Flask
+from flask_babel import Babel
+from babel.numbers import format_decimal
 
 from sqlalchemy.dialects.postgresql import ARRAY
 from sqlalchemy.types import JSON
@@ -148,15 +150,17 @@ def load_user(user_id):
     return Employee.query.get(int(user_id))
 
 
+app = Flask(__name__)
+# ضبط لغة التطبيق الافتراضية على الألمانية
+app.config['BABEL_DEFAULT_LOCALE'] = 'de_DE'
 babel = Babel(app)
 
 @app.template_filter("price")
 def format_price(value):
     if value is None:
         return ""
-    return format_number(value, locale="de_DE")  # يعطي 1.000.000
-
-
+    # استخدام format_decimal مع تحديد locale مباشرة
+    return format_decimal(value, locale='de_DE')
 
 
 # ================== صلاحيات ==================
